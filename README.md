@@ -1,7 +1,7 @@
 # Identifying Leading Indicators of Population Health
 
 Project Creator & Developer: Jason Summer
-Quality Assurance Support: 
+
 # Project Charter
 
 ## Background
