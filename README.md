@@ -1,4 +1,28 @@
-# MSiA423 Template Repository
+# Identifying Leading Indicators of Population Health
+
+Project Creator & Developer: Jason Summer
+Quality Assurance Support: 
+# Project Charter
+
+## Background
+
+In 2015, the Centers for Disease Control and Prevention (CDC), CDC Foundation, and the Robert Wood Johnson Foundation began the 500 Cities Project, an effort to provide population health estimates for small geographic areas for health officials, policy makers, nonprofits, and other organizations seeking to improve health. In 2016, the partnership expanded its geographic breadth of health estimates with PLACES (Population Level Analysis and Community Estimates), enabling much larger scale analysis of health measures nationwide. 
+
+## Vision
+
+To improve population health demographics and outcomes, this effort seeks to prioritize key contributors and leading indicators while highlighting at-risk geographical areas as indicated by poor population health statuses and outcomes.
+
+## Mission
+
+Machine learning modeling is used as a mechanism for both highlighting key contributors of health statuses and estimating population health risk. More specifically, machine learning models leverage 2018 and 2019 [PLACES](https://chronicdata.cdc.gov/500-Cities-Places/PLACES-Local-Data-for-Better-Health-Census-Tract-D/cwsq-ngmh) data to predict population proportions with poor/fair health by understanding the relationship among 29 health measures, population sizes, and geographical areas. 
+
+The selected model is served to users through an open web application, wherein users can select various health outcomes, population sizes, and geographical areas to receive a predicted population proportion with poor/fair health. More importantly, the application seeks to accomplish two key tasks, previously mentioned. First, it highlights the impacts in predicted population proportions based on changing user inputs. Secondly, it provides a proactive tool for users to identify populations that may be at-risk based on trending figures. 
+
+## Success Criteria
+
+RMSE (root mean squared error) of the predicted population proportion with poor/fair health is the selected metric to gauge a more traditional success of the preferred machine learning model. The initial threshold set for success is RMSE of 5, which is twice the confidence interval of the labels found in PLACES.
+
+The overall business success of the web application is based on usage and viewership. To better articulate and measure such goals, return users (within 1 week) and number of predictions generated per user session should be used. 
 
 # Table of Contents
 * [Directory structure ](#Directory-structure)
@@ -9,7 +33,6 @@
 * [Testing](#Testing)
 * [Mypy](#Mypy)
 * [Pylint](#Pylint)
-
 
 
 ## Directory structure 
