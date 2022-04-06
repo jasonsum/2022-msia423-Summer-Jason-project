@@ -16,7 +16,7 @@ To improve population health demographics and outcomes, this effort seeks to pri
 
 Machine learning modeling is used as a mechanism for both highlighting key contributors of health statuses and estimating population health risk. More specifically, machine learning models leverage 2018 and 2019 [PLACES](https://chronicdata.cdc.gov/500-Cities-Places/PLACES-Local-Data-for-Better-Health-Census-Tract-D/cwsq-ngmh) data to predict population proportions with poor/fair health by understanding the relationship among 29 health measures, population sizes, and geographical areas. 
 
-The selected model is served to users through an open web application, wherein users can select various health outcomes, population sizes, and geographical areas to receive a predicted population proportion with poor/fair health. More importantly, the application seeks to accomplish the two key tasks - highlight the impacts in predicted population proportions based on changing user inputs and provide a proactive tool for users to identify populations that may be at-risk based on trending figures. 
+The selected model is served to users through an open web application, wherein users can select various health outcomes, population sizes, and geographical areas to receive a predicted population proportion with poor/fair health. More importantly, the application seeks to accomplish the two key tasks - highlight the impact to predicted population proportions based on changing user inputs and provide a proactive tool for users to identify populations that may be at-risk based on trending figures. 
 
 ## Success Criteria
 
