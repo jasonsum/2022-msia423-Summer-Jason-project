@@ -20,7 +20,7 @@ The selected model is served to users through an open web application, wherein u
 
 ## Success Criteria
 
-RMSE (root mean squared error) of the predicted population proportion with poor/fair health is the selected metric to gauge a more traditional success of the preferred machine learning model. The initial threshold set for success is RMSE of 5, which is twice the confidence interval of the labels found in PLACES.
+RMSE (root mean squared error) of the predicted population proportion with poor/fair health is the selected metric to gauge a more traditional success of the preferred machine learning model. The initial threshold set for success is RMSE of 2.5 percentage points in regards to the predicted proportion. This, corresponds to the confidence interval margin of error of the original labels found in PLACES, which are estimated by the data compilers.
 
 The overall business success of the web application is based on usage and viewership. To better articulate and measure such goals, return users (within 1 week) and number of predictions generated per user session should be used. 
 
