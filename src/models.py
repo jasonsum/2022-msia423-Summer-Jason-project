@@ -1,4 +1,4 @@
-"""Creates and ingests data into a table of songs for the PennyLane."""
+"""Creates table structure for features, model parameters, and refences for PLACES project."""
 import os
 import logging
 import sqlalchemy as sql
