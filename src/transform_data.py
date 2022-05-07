@@ -1,16 +1,18 @@
 """
-Module imports PLACES data and conducts minor transformations in preparation of modeling
+Module imports conducts minor transformations in preparation of modeling
 """
 
 import typing
 import getpass
 import logging
+import typing
+import sys
 
 import pandas as pd
 import numpy as np
 from sodapy import Socrata
 
-logger = logging.getLogger(__name__) 
+logger = logging.getLogger(__name__)
 
 places_file_path : str = '../data/places_raw_data.csv'
 
@@ -38,94 +40,38 @@ states_region_mapping : typing.Dict[str, str] = {
     'Arizona': 'Southwest', 'New Mexico': 'Southwest', 'Oklahoma': 'Southwest',
     'Texas': 'Southwest'}
 
-def import_places_api() -> pd.DataFrame:
+def import_from_s3(s3path: str, 
+                   columns : typing.List[str],
+                   sep: str = ';') -> pd.DataFrame:
     """
-    Retrieves CDC PLACES data via Socrata API.
+    Imports CDC PLACES data from s3 bucket.
 
-    Function uses CDC's Socrata APIs to import 2019 PLACES data.
-    User will be prompted to enter Socrata App Token, username, and password.
-    Resulting pandas dataframe contains columns:
-    'StateDesc', 'CountyName', 'CountyFIPS', 'LocationID',
-    'TotalPopulation', 'Geolocation', 'MeasureId', 'Data_Value',
-    'Category', 'Short_Question_Text', 'Measure'.
+    Function imports csv data from s3 and generates 
+    pandas dataframe from entire csv.
+    Pandas dataframe has columns passed through columns parameter
 
     Args:
-        None
-
-    Returns:
-        pandas dataframe: PLACES data from API
-
-    """
-    client = Socrata("chronicdata.cdc.gov",
-                     getpass.getpass(prompt = 'App Token: '),
-                     getpass.getpass(prompt = "username: "),
-                     getpass.getpass(prompt = "password: "))
-    socrata_dataset_identifier : str = "cwsq-ngmh"
-    socrata_query : str = """
-    select 
-        StateDesc,
-        CountyName,
-        CountyFIPS,
-        LocationID,
-        TotalPopulation,
-        Geolocation,
-        MeasureId,
-        Data_Value,
-        Category,
-        Short_Question_Text,
-        Measure
-    where
-        year = '2019'
-        and data_value is not null
-    limit 3000000
-    """
-    # API suggestions sourced from https://dev.socrata.com/foundry/chronicdata.cdc.gov/cwsq-ngmh
-    data : list[list[str]] = client.get(socrata_dataset_identifier,
-                                        query = socrata_query,
-                                        exclude_system_fields = True)
-    data_df : pd.DataFrame = pd.DataFrame.from_records(data)
-    return data_df
-
-def import_places(use_api : bool = True,
-                  file_path : typing.Optional[str] = None) -> pd.DataFrame:
-    """
-    Imports CDC PLACES data from API or csv.
-
-    Function imports and generates pandas dataframe with columns
-    'StateDesc', 'CountyName', 'CountyFIPS', 'LocationID',
-    'TotalPopulation', 'Geolocation', 'MeasureId', 'Data_Value',
-    'Category', 'Short_Question_Text', 'Measure'. If use_API = True,
-    a dataframe will be generated via API and user will be prompted
-    for credentials.
-
-    Args:
-        use_api (bool) : Uses Socrata API to generate data if True.
-                         Defaults to True.
-        file_path (str) : Relative or absolute path to PLACES csv file.
-                          Defaults to None
+        s3path (str) : Url of s3 bucket
+        columns (list of str) : Columns of dataframe to include.
+        sep (str) : Delimeter character. 
+                    Defaults to ';' to avoid inferring incorrect character.
 
     Returns:
         pandas dataframe: PLACES data
 
     """
-    if use_api:
-        places : pd.DataFrame = import_places_api()
+
+    try:
+        places : pd.DataFrame = pd.read_csv(s3path, 
+                                            usecols = columns, #type:ignore
+                                            sep=sep)
+    except botocore.exceptions.NoCredentialsError:
+        logger.error('Please provide AWS credentials via AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY env variables.')
+        sys.exit(1)
     else:
-        places : pd.DataFrame = pd.read_csv(file_path,
-                                            usecols = ['StateDesc',
-                                                    'CountyName',
-                                                    'CountyFIPS',
-                                                    'LocationID',
-                                                    'TotalPopulation',
-                                                    'Geolocation',
-                                                    'MeasureId',
-                                                    'Data_Value',
-                                                    'Category',
-                                                    'Short_Question_Text',
-                                                    'Measure'])  # type: ignore
-    # Drop row with NA data_value
-    places = places.drop(places.loc[places.Data_Value.isna()].index, axis=0)
-    logger.info("Imported places row count: {}".format(places.shape[0]))
+        # Drop row with NA data_value
+        places = places.drop(places.loc[places.Data_Value.isna()].index, axis=0)
+        logger.info("Imported places, valid row count is {}".format(places.shape[0]))
 
     return places
 
