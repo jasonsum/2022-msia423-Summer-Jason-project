@@ -3,7 +3,6 @@ Module imports conducts minor transformations in preparation of modeling
 """
 
 import typing
-import getpass
 import logging
 import typing
 import sys

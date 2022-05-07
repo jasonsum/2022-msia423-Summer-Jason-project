@@ -2,7 +2,6 @@
 Module retrieves PLACES data from API, uploads to S3, and imports from S3
 """
 
-import getpass
 import logging
 import os
 import time
