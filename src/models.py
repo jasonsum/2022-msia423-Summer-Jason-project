@@ -3,14 +3,9 @@ import os
 import logging
 import sqlalchemy as sql
 import sqlalchemy.exc
-from sqlalchemy.orm import sessionmaker
+import sqlalchemy.orm
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, MetaData, Float
-
-engine_string = os.getenv("SQLALCHEMY_DATABASE_URI")
-if engine_string is None:
-    raise RuntimeError("SQLALCHEMY_DATABASE_URI environment variable not set; exiting")
-# engine_string = "mysql+pymysql://user:password@host:3306/msia423_db"
 
 # set up looging config
 logging.basicConfig(format="%(levelname)s:%(message)s", level=logging.DEBUG)
@@ -18,41 +13,40 @@ logger = logging.getLogger(__file__)
 
 Base = declarative_base()
 
-
 class Features(Base):
     """Creates a table of feature value for generating predictions."""
 
     __tablename__ = "features"
 
-    id = sqlalchemy.Column(sqlalchemy.Float, primary_key=True)
-    access2 = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    arthritis = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    binge = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    bphigh = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    bpmed = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    cancer = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    casthma = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    chd = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    checkup = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    cholscreen = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    copd = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    csmoking = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    depression = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    diabetes = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    highcol = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    kidney = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    lpa = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    mhlth = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    obesity = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    phlth = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    stroke = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    scaled_TotalPopulation = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    midwest = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    northeast = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    south = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    southwest = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    logit_ghlth = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=True)
-    ghlth = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=True)
+    id = sql.Column(sql.Float, primary_key=True)
+    access2 = sql.Column(sql.Float, unique=False, nullable=False)
+    arthritis = sql.Column(sql.Float, unique=False, nullable=False)
+    binge = sql.Column(sql.Float, unique=False, nullable=False)
+    bphigh = sql.Column(sql.Float, unique=False, nullable=False)
+    bpmed = sql.Column(sql.Float, unique=False, nullable=False)
+    cancer = sql.Column(sql.Float, unique=False, nullable=False)
+    casthma = sql.Column(sql.Float, unique=False, nullable=False)
+    chd = sql.Column(sql.Float, unique=False, nullable=False)
+    checkup = sql.Column(sql.Float, unique=False, nullable=False)
+    cholscreen = sql.Column(sql.Float, unique=False, nullable=False)
+    copd = sql.Column(sql.Float, unique=False, nullable=False)
+    csmoking = sql.Column(sql.Float, unique=False, nullable=False)
+    depression = sql.Column(sql.Float, unique=False, nullable=False)
+    diabetes = sql.Column(sql.Float, unique=False, nullable=False)
+    highcol = sql.Column(sql.Float, unique=False, nullable=False)
+    kidney = sql.Column(sql.Float, unique=False, nullable=False)
+    lpa = sql.Column(sql.Float, unique=False, nullable=False)
+    mhlth = sql.Column(sql.Float, unique=False, nullable=False)
+    obesity = sql.Column(sql.Float, unique=False, nullable=False)
+    phlth = sql.Column(sql.Float, unique=False, nullable=False)
+    stroke = sql.Column(sql.Float, unique=False, nullable=False)
+    scaled_TotalPopulation = sql.Column(sql.Float, unique=False, nullable=False)
+    midwest = sql.Column(sql.Float, unique=False, nullable=False)
+    northeast = sql.Column(sql.Float, unique=False, nullable=False)
+    south = sql.Column(sql.Float, unique=False, nullable=False)
+    southwest = sql.Column(sql.Float, unique=False, nullable=False)
+    logit_ghlth = sql.Column(sql.Float, unique=False, nullable=True)
+    ghlth = sql.Column(sql.Float, unique=False, nullable=True)
 
     def __repr__(self):
         return f"<Features: access2: {self.access2}, arthritis: {self.arthritis}, binge: {self.binge}, bphigh: {self.bphigh}, bpmed: {self.bpmed}, cancer: {self.cancer}, \
@@ -61,38 +55,38 @@ class Features(Base):
                 stroke: {self.stroke}, scaled_TotalPopulation: {self.scaled_TotalPopulation}, midwest: {self.midwest}, northeast: {self.northeast}, south: {self.south}, southwest: {self.southwest}>"
 
 class Parameters(Base):
-    """Creates a table of regression parameters for predicting log-transformed GHLTH."""
+    """Creates a table of regression parameters for predicting log-odds of GHLTH."""
 
     __tablename__ = "parameters"
 
-    id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
-    access2 = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    arthritis = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    binge = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    bphigh = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    bpmed = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    cancer = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    casthma = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    chd = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    checkup = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    cholscreen = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    copd = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    csmoking = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    depression = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    diabetes = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    highcol = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    kidney = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    lpa = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    mhlth = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    obesity = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    phlth = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    stroke = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    scaled_TotalPopulation = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    midwest = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    northeast = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    south = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    southwest = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
-    intercept = sqlalchemy.Column(sqlalchemy.Float, unique=False, nullable=False)
+    id = sql.Column(sql.Integer, primary_key=True)
+    access2 = sql.Column(sql.Float, unique=False, nullable=False)
+    arthritis = sql.Column(sql.Float, unique=False, nullable=False)
+    binge = sql.Column(sql.Float, unique=False, nullable=False)
+    bphigh = sql.Column(sql.Float, unique=False, nullable=False)
+    bpmed = sql.Column(sql.Float, unique=False, nullable=False)
+    cancer = sql.Column(sql.Float, unique=False, nullable=False)
+    casthma = sql.Column(sql.Float, unique=False, nullable=False)
+    chd = sql.Column(sql.Float, unique=False, nullable=False)
+    checkup = sql.Column(sql.Float, unique=False, nullable=False)
+    cholscreen = sql.Column(sql.Float, unique=False, nullable=False)
+    copd = sql.Column(sql.Float, unique=False, nullable=False)
+    csmoking = sql.Column(sql.Float, unique=False, nullable=False)
+    depression = sql.Column(sql.Float, unique=False, nullable=False)
+    diabetes = sql.Column(sql.Float, unique=False, nullable=False)
+    highcol = sql.Column(sql.Float, unique=False, nullable=False)
+    kidney = sql.Column(sql.Float, unique=False, nullable=False)
+    lpa = sql.Column(sql.Float, unique=False, nullable=False)
+    mhlth = sql.Column(sql.Float, unique=False, nullable=False)
+    obesity = sql.Column(sql.Float, unique=False, nullable=False)
+    phlth = sql.Column(sql.Float, unique=False, nullable=False)
+    stroke = sql.Column(sql.Float, unique=False, nullable=False)
+    scaled_TotalPopulation = sql.Column(sql.Float, unique=False, nullable=False)
+    midwest = sql.Column(sql.Float, unique=False, nullable=False)
+    northeast = sql.Column(sql.Float, unique=False, nullable=False)
+    south = sql.Column(sql.Float, unique=False, nullable=False)
+    southwest = sql.Column(sql.Float, unique=False, nullable=False)
+    intercept = sql.Column(sql.Float, unique=False, nullable=False)
 
     def __repr__(self):
         return f"<Parameters: access2: {self.access2}, arthritis: {self.arthritis}, binge: {self.binge}, bphigh: {self.bphigh}, bpmed: {self.bpmed}, cancer: {self.cancer}, \
@@ -106,34 +100,29 @@ class Measures(Base):
 
     __tablename__ = "measures"
 
-    id = sqlalchemy.Column(sqlalchemy.Integer, primary_key=True)
-    category = sqlalchemy.Column(sqlalchemy.String(100), unique=False, nullable=False)
-    measureid = sqlalchemy.Column(sqlalchemy.String(100), unique=False, nullable=False)
-    short_question_text = sqlalchemy.Column(sqlalchemy.String(100), unique=False, nullable=False)
+    id = sql.Column(sql.Integer, primary_key=True)
+    category = sql.Column(sql.String(100), unique=False, nullable=False)
+    measureid = sql.Column(sql.String(100), unique=False, nullable=False)
+    short_question_text = sql.Column(sql.String(100), unique=False, nullable=False)
 
     def __repr__(self):
         return f"<Measures: category: {self.category}, measureid: {self.measureid}, short_question_text: {self.short_question_text}>"
 
+def create_references(engine : sql.engine.base.Engine):
+    """
+    Creates database table of PLACES metric reference information.
 
-if __name__ == "__main__":
-    # set up mysql connection
-    engine = sql.create_engine(engine_string)
+    Args:
+        engine (sql.engine.base.Engine) : SQL Alchemy engine object.
 
-    # test database connection
-    try:
-        engine.connect()
-    except sqlalchemy.exc.OperationalError as e:
-        logger.error("Could not connect to database!")
-        logger.debug("Database URI: %s", )
-        raise e
+    Returns:
+        None
 
-    # create tableS
-    Base.metadata.create_all(engine)
-    logger.info("Database created.")
+    """
 
     # create a db session
-    Session = sessionmaker(bind=engine)
-    session = Session()
+    Session : sqlalchemy.orm.session.sessionmaker = sqlalchemy.orm.sessionmaker(bind=engine)
+    session : sqlalchemy.orm.session.Session = Session()
 
     # add measure references
     teethlost = Measures(category="health outcomes", measureid="teethlost", short_question_text="all teeth lost")
@@ -201,3 +190,33 @@ if __name__ == "__main__":
     logger.info(
         "Measure references created."
     )
+
+def create_db(engine_string : str) -> None:
+    """
+    Creates database table schema and populates one table with measurement
+    PLACES metric reference information.
+
+    Args:
+        engine_string (str) : SQL Alchemy database URI path.
+
+    Returns:
+        None
+
+    """
+    engine : sql.engine.base.Engine = sql.create_engine(engine_string)
+
+    # test database connection
+    try:
+        engine.connect()
+    except sqlalchemy.exc.OperationalError as e:
+        logger.error("Could not connect to database!")
+        logger.debug("Database URI: %s", )
+        raise e
+
+    # create tables
+    Base.metadata.create_all(engine)
+    logger.info("Database created.")
+
+    # add reference table
+    create_references(engine)
+

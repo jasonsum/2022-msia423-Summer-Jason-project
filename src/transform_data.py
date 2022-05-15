@@ -13,8 +13,6 @@ from sodapy import Socrata
 
 logger = logging.getLogger(__name__)
 
-places_file_path : str = '../data/places_raw_data.csv'
-
 measures : typing.List[str] = ['ACCESS2', 'ARTHRITIS', 'BINGE','BPHIGH', 'BPMED',
                                 'CANCER', 'CASTHMA', 'CHD', 'CHECKUP', 'CHOLSCREEN',
                                 'COPD', 'CSMOKING', 'DEPRESSION', 'DIABETES',
@@ -39,21 +37,21 @@ states_region_mapping : typing.Dict[str, str] = {
     'Arizona': 'Southwest', 'New Mexico': 'Southwest', 'Oklahoma': 'Southwest',
     'Texas': 'Southwest'}
 
-def import_from_s3(s3path: str, 
-                   columns : typing.List[str],
-                   sep: str = ';') -> pd.DataFrame:
+def import_from_s3(s3path: str,
+                   columns : typing.Optional[typing.List[str]] = None,
+                   sep: str = ',') -> pd.DataFrame:
     """
     Imports CDC PLACES data from s3 bucket.
 
-    Function imports csv data from s3 and generates 
+    Function imports csv data from s3 and generates
     pandas dataframe from entire csv.
     Pandas dataframe has columns passed through columns parameter
 
     Args:
         s3path (str) : Url of s3 bucket
         columns (list of str) : Columns of dataframe to include.
-        sep (str) : Delimeter character. 
-                    Defaults to ';' to avoid inferring incorrect character.
+        sep (str) : Delimeter character.
+                    Defaults to ',' for csv.
 
     Returns:
         pandas dataframe: PLACES data
@@ -61,7 +59,7 @@ def import_from_s3(s3path: str,
     """
 
     try:
-        places : pd.DataFrame = pd.read_csv(s3path, 
+        places : pd.DataFrame = pd.read_csv(s3path,
                                             usecols = columns, #type:ignore
                                             sep=sep)
     except botocore.exceptions.NoCredentialsError:
@@ -70,7 +68,7 @@ def import_from_s3(s3path: str,
     else:
         # Drop row with NA data_value
         places = places.drop(places.loc[places.Data_Value.isna()].index, axis=0)
-        logger.info("Imported places, valid row count is {}".format(places.shape[0]))
+        logger.info("Imported places, valid row count is %i", places.shape[0])
 
     return places
 
@@ -100,7 +98,7 @@ def pivot_measures (places_df : pd.DataFrame) -> pd.DataFrame:
 
     places_pivot.drop(places_pivot.loc[places_pivot.GHLTH.isnull()].index, axis=0, inplace=True)
     null_rows = places_pivot.loc[places_pivot.GHLTH.isnull()].shape[0]
-    logger.info("Number of null GHLTH records dropped: {}".format(null_rows))
+    logger.info("Number of null GHLTH records dropped: %i",null_rows)
 
     places_pivot.drop(['TEETHLOST', 'SLEEP', 'MAMMOUSE', 'DENTAL', 'COREW',
                        'COREM', 'COLON_SCREEN', 'CERVICAL'],
@@ -123,7 +121,8 @@ def reformat_measures(places_pivot : pd.DataFrame,
     Args:
         places_pivot (dataframe) : Pivoted dataframe of PLACES data.
                                    See pivot_places return.
-        measure_names (list) : List of PLACES measure names to reformat to [0,1].
+        measure_names (list) : List of PLACES measure names to 
+                               reformat to [0,1].
 
     Returns:
         pandas dataframe: PLACES dataframe with one row per county
@@ -168,17 +167,21 @@ def add_regions(places_pivot : pd.DataFrame,
     places_pivot = places_pivot.join(pd.get_dummies(places_pivot['region']).drop('West', axis=1))
     return places_pivot
 
-def retrieve_data(states_to_regions : typing.Dict[str, str],
-                  use_api : bool = True,
-                  file_path : typing.Optional[str] = None) -> pd.DataFrame:
+def prep_data(places_df : pd.DataFrame,
+              measures_names : typing.List[str],
+              states_to_regions : typing.Dict[str, str]) -> pd.DataFrame:
     """
-    Helper function that imports PLACES data and performs minor transformations.
+    Helper function that conducts data transformations of PLACES data.
 
-    Function imports PLACES data from file_path, pivots to create one row per
+    Function pivots to create one row per
     county, and performs minor filtering and transformations.
+    Output will be dataframe ready for model training.
 
     Args:
-        file_path (str) : Relative or absolute path to PLACES csv file.
+        places_df (dataframe) : Dataframe from PLACES csv import.
+                                See import_from_s3 return.
+        measure_names (list) : List of PLACES measure names to
+                               reformat to [0,1].
         states_to_regions (dict) : Key[str] is state name.
                                    Value[str] is region name.
 
@@ -186,9 +189,8 @@ def retrieve_data(states_to_regions : typing.Dict[str, str],
         pandas dataframe: PLACES dataframe with one row per county
 
     """
-    places_df = import_places(use_api, file_path)
     places_pivot = pivot_measures(places_df)
-    places_pivot = reformat_measures(places_pivot, measures)
+    places_pivot = reformat_measures(places_pivot, measures_names)
     places_pivot = add_regions(places_pivot,
                                states_to_regions)
     return places_pivot
