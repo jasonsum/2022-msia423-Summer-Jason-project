@@ -13,12 +13,6 @@ from sodapy import Socrata
 
 logger = logging.getLogger(__name__)
 
-measures : typing.List[str] = ['ACCESS2', 'ARTHRITIS', 'BINGE','BPHIGH', 'BPMED',
-                                'CANCER', 'CASTHMA', 'CHD', 'CHECKUP', 'CHOLSCREEN',
-                                'COPD', 'CSMOKING', 'DEPRESSION', 'DIABETES',
-                                'GHLTH', 'HIGHCHOL', 'KIDNEY', 'LPA', 'MHLTH',
-                                'OBESITY', 'PHLTH', 'STROKE']
-
 # sourced from https://gist.github.com/sfirrin/fd01d87f022d80e98c37a045c14109fe
 states_region_mapping : typing.Dict[str, str] = {
     'Washington': 'West', 'Oregon': 'West', 'California': 'West', 'Nevada': 'West',
@@ -72,14 +66,36 @@ def import_from_s3(s3path: str,
 
     return places
 
+def validate_import(places_df: pd.DataFrame) -> None:
+    """
+    Performs validation of PLACES data imported from S3.
+
+    Args:
+        places_df (dataframe) : Dataframe from PLACES csv import.
+                                See import_from_s3 return.
+
+    Returns:
+        None
+    """
+
+    try:
+        logger.info("Unique counties measured %i", len(places_df['CountyFIPS'].unique()))
+    except KeyError:
+        logger.error("CountyFIPS does not exist in imported data.")
+    if not set(['StateDesc', 'CountyName', 'CountyFIPS',
+             'LocationID', 'TotalPopulation', 'Geolocation',
+             'MeasureId', 'Data_Value']).issubset(places_df.columns):
+             logger.error("Some necessary columns are missing."
+                          "Please confirm that the following columns are present:"
+                          "StateDesc, CountyName, CountyFIPS, LocationID," 
+                          "TotalPopulation, Geolocation, MeasureId, Data_Value")
 
 def pivot_measures (places_df : pd.DataFrame) -> pd.DataFrame:
     """
     Transposes dataframe of PLACES data from row-wise measures to column-wise.
 
     Function produces a dataframe of one row per county with columns containing
-    the value of measures. Some known measures are removed due to lack of data.
-    Any county with a missing 'GHTLH' value is removed.
+    the value of measures. 
 
     Args:
         places_df (dataframe) : Dataframe from PLACES csv import.
@@ -96,52 +112,111 @@ def pivot_measures (places_df : pd.DataFrame) -> pd.DataFrame:
                            values = 'Data_Value').reset_index()
     places_pivot = places_pivot.rename_axis(None, axis=1)
 
-    places_pivot.drop(places_pivot.loc[places_pivot.GHLTH.isnull()].index, axis=0, inplace=True)
-    null_rows = places_pivot.loc[places_pivot.GHLTH.isnull()].shape[0]
-    logger.info("Number of null GHLTH records dropped: %i",null_rows)
+    return places_pivot
 
-    places_pivot.drop(['TEETHLOST', 'SLEEP', 'MAMMOUSE', 'DENTAL', 'COREW',
-                       'COREM', 'COLON_SCREEN', 'CERVICAL'],
+def drop_null_responses(places_pivot : pd.DataFrame,
+                        response : str) -> pd.DataFrame:
+    """
+    Removes rows that have null response column values
+
+    Args:
+        places_pivot (dataframe) : PLACES dataframe pivoted to one row per county
+                                   See pivot_measures return.
+        response (str) : Column to be used as response variable.
+                         Rows with null values in this column will be removed.
+
+    Returns:
+        pandas dataframe: pivoted PLACES dataframe without null response rows
+
+    """
+
+    initial_count = places_pivot.shape[0]
+    places_pivot.dropna(subset = [response],
+                        inplace=True,
+                        axis=0)
+    new_count = places_pivot.shape[0]
+
+    places_pivot.drop(places_pivot.loc[places_pivot[response].isnull()].index, axis=0, inplace=True)
+    logger.info("Number of null response records dropped: %i",initial_count - new_count)
+
+    return places_pivot
+
+
+def drop_invalid_measures(places_pivot : pd.DataFrame,
+                          invalid_measures : typing.List[str]) -> pd.DataFrame:
+
+    """
+    Removes invalid PLACES measurement columns.
+
+    Some measured are not consistently obtained during the CDC survey. 
+    Others introduce multicollinearity among predictors.
+
+    Args:
+        places_pivot (dataframe) : PLACES dataframe pivoted to one row per county
+                                   See pivot_measures return.
+        invalid_measures (list) : Measure column names to be dropped.
+
+    Returns:
+        pandas dataframe: pivoted PLACES dataframe without subset of measures
+
+    """
+    places_pivot.drop(invalid_measures,
                       axis=1,
                       inplace=True)
 
     places_pivot.reset_index(drop=True, inplace=True)
+    
     return places_pivot
 
 
 def reformat_measures(places_pivot : pd.DataFrame,
-                      measures_names : typing.List[str]) -> pd.DataFrame:
+                      make_floats : typing.List[str],
+                      make_logit : typing.Optional[str],
+                      min_max_scale : typing.Optional[typing.Union[str, typing.List[str]]]
+                      ) -> pd.DataFrame:
     """
-    Conducts minor data transformations to measures and population columns of places_pivot.
+    Conducts minor data transformations to measures of places_pivot.
 
-    Replaces whole number measure data values, which represent proportions, to float [0,1].
-    Adds the log-odds of 'GHLTH' as a column to be used as future response variable.
-    Creates a [0,1] min-max scaled version of 'TotalPopulation'.
+    Transforms integer proportions with floats [0,1] representing decimal proportions.
+    Creates a log-odds column to be used in regression of a proportion. 
+    Min-max scales columns to a range of [0,1].
 
     Args:
         places_pivot (dataframe) : Pivoted dataframe of PLACES data.
                                    See pivot_places return.
-        measure_names (list) : List of PLACES measure names to 
-                               reformat to [0,1].
+        make_floats (list) : List of PLACES measure names to
+                             reformat to [0,1] proportions.
+        make_logit (str) : Field name to transform into log-odds.
+                           Should be used to transform response variable into log-odds.
+        min_max_scale (str) : Field name(s) to scale to [0,1] using min-max scaling.
 
     Returns:
-        pandas dataframe: PLACES dataframe with one row per county
+        pandas dataframe: PLACES dataframe with reformatted column measures
 
     """
-    places_pivot[measures_names] = places_pivot[measures_names] / 100 # Reformat to [0,1]
-    # Create logit of GHTLH for logistic response variable
-    places_pivot['logit_GHLTH'] = np.log(places_pivot['GHLTH'] / (1 - places_pivot['GHLTH']))
+    places_pivot[make_floats] = places_pivot[make_floats] / 100 # Reformat to [0,1]
+    # Create logit of response for [0,1] regression
+    if make_logit:
+        places_pivot[make_logit] = np.log(places_pivot[make_logit] / (1 - places_pivot[make_logit]))
 
-    # Standardize population to [0,1]
-    places_pivot['scaled_TotalPopulation'] = (places_pivot['TotalPopulation'] \
-                                              - places_pivot['TotalPopulation'].min())  \
-                                           / (places_pivot['TotalPopulation'].max() \
-                                              - places_pivot['TotalPopulation'].min())
+    # Standardize columns with min-max scaling to [0,1]
+    if min_max_scale:
+        if isinstance(min_max_scale, str):
+            places_pivot['scaled_' + min_max_scale] = (places_pivot[min_max_scale] \
+                                                    - places_pivot[min_max_scale].min())  \
+                                                / (places_pivot[min_max_scale].max() \
+                                                    - places_pivot[min_max_scale].min())
+        if isinstance(min_max_scale, list):
+            for i in min_max_scale:
+                places_pivot['scaled_' + i] = (places_pivot[i] \
+                                                        - places_pivot[i].min())  \
+                                                    / (places_pivot[i].max() \
+                                                        - places_pivot[i].min())
     return places_pivot
 
 
-def add_regions(places_pivot : pd.DataFrame,
-                states_to_regions : typing.Dict[str, str]) -> pd.DataFrame:
+def one_hot_encode(places_pivot : pd.DataFrame,
+                   states_to_regions : typing.Dict[str, str]) -> pd.DataFrame:
     """
     Adds 1/0 dummy columns corresponding to each state's region.
 
@@ -155,7 +230,7 @@ def add_regions(places_pivot : pd.DataFrame,
                                    Value[str] is region name.
 
     Returns:
-        pandas dataframe: PLACES dataframe with one row per county
+        pandas dataframe: PLACES dataframe with regions one-hot encoded
 
     """
 
@@ -168,29 +243,38 @@ def add_regions(places_pivot : pd.DataFrame,
     return places_pivot
 
 def prep_data(places_df : pd.DataFrame,
-              measures_names : typing.List[str],
-              states_to_regions : typing.Dict[str, str]) -> pd.DataFrame:
+              response : str,
+              invalid_measures : typing.List[str],
+              make_floats : typing.List[str],
+              make_logit : typing.Optional[str],
+              min_max_scale : typing.Optional[typing.Union[str, typing.List[str]]]) -> pd.DataFrame:
     """
     Helper function that conducts data transformations of PLACES data.
 
     Function pivots to create one row per
     county, and performs minor filtering and transformations.
-    Output will be dataframe ready for model training.
+    Output will have PLACES measure prepared for modeling.
 
     Args:
         places_df (dataframe) : Dataframe from PLACES csv import.
                                 See import_from_s3 return.
-        measure_names (list) : List of PLACES measure names to
-                               reformat to [0,1].
-        states_to_regions (dict) : Key[str] is state name.
-                                   Value[str] is region name.
+        response (str) : Column to be used as response variable.
+                         Rows with null values in this column will be removed.
+        invalid_measures (list) : Measure column names to be dropped.
+        make_floats (list) : List of PLACES measure names to
+                             reformat to [0,1] proportions.
+        make_logit (str) : Field name to transform into log-odds.
+                           Should be used to transform response variable into log-odds.
+        min_max_scale (str, list) : Field name(s) to scale to [0,1] using min-max scaling.
 
     Returns:
         pandas dataframe: PLACES dataframe with one row per county
 
     """
     places_pivot = pivot_measures(places_df)
-    places_pivot = reformat_measures(places_pivot, measures_names)
-    places_pivot = add_regions(places_pivot,
-                               states_to_regions)
+    places_pivot = drop_null_responses(places_pivot, response)
+    places_pivot = drop_invalid_measures(places_pivot, invalid_measures)
+    places_pivot = reformat_measures(places_pivot, make_floats,
+                                     make_logit, min_max_scale)
+
     return places_pivot
