@@ -1,0 +1,23 @@
+model:
+  name: linear-regression
+  author: Jason Summer
+  version: AA1
+  description: Predicts the log-odds of the proportion of county population with poor health based on proportional demographics.
+  tags:
+    - regression
+    - health
+    - population health
+transform_data:
+  import_from_s3:
+    columns: [StateDesc, CountyName, CountyFIPS, LocationID, TotalPopulation, Geolocation, MeasureId, Data_Value, Category, Short_Question_Text, Measure]
+  prep_data:
+    response: GHLTH
+    invalid_measures: [TEETHLOST, SLEEP, MAMMOUSE, DENTAL, COREW, COREM, COLON_SCREEN, CERVICAL, LPA, MHLTH, PHLTH]
+    make_floats: [ACCESS2, ARTHRITIS, BINGE, BPHIGH, BPMED, CANCER, CASTHMA, CHD, CHECKUP, CHOLSCREEN, COPD, CSMOKING, DEPRESSION, DIABETES, GHLTH, HIGHCHOL, KIDNEY, OBESITY, STROKE]
+    make_logit: GHLTH
+    min_max_scale: TotalPopulation
+train_model:
+  divide_x_y:
+    response: logit_GHLTH
+    feature_list: [ACCESS2, ARTHRITIS, BINGE, BPHIGH, BPMED, CANCER, CASTHMA, CHD, CHECKUP, CHOLSCREEN, COPD, CSMOKING, DEPRESSION, DIABETES, HIGHCHOL, KIDNEY, OBESITY, STROKE, scaled_TotalPopulation, Midwest, Northeast, South, Southwest]
+
