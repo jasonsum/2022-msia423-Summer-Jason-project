@@ -5,11 +5,14 @@ import logging
 import logging.config
 import os
 import yaml
+import sys
 
-from config.flaskconfig import SQLALCHEMY_DATABASE_URI
 from config.config import SOCRATA_DATASET_IDENTIFIER
+from config.config import SQLALCHEMY_DATABASE_URI
+from config.config import SOCRATA_TOKEN, SOCRATA_USERNAME, SOCRATA_PASSWORD
 from src.retrieve_data import import_places_api, upload_to_s3_pandas
 from src.models import create_db
+from src.add_definitions import add_references
 from src.transform_data import import_from_s3, prep_data, one_hot_encode
 from data.reference.state_region_mapping import states_region_mapping
 
@@ -28,46 +31,57 @@ if __name__ == '__main__':
                                       description="Create database")
     sp_create.add_argument("--engine_string", default=SQLALCHEMY_DATABASE_URI,
                            help="SQLAlchemy connection URI for database")
+    sp_create.add_argument("--definitions", action='store_true', default=False,
+                           help="Add definitions to Measures table")
+    
+    # Sub-parser for adding measure definitions
+    sp_create = subparsers.add_parser("define",
+                                      description="Add measure definitions")
+    sp_create.add_argument("--engine_string", default=SQLALCHEMY_DATABASE_URI,
+                           help="SQLAlchemy connection URI for database")
 
     # Sub-parser for ingesting data from API and placing in S3
     sp_ingest = subparsers.add_parser("ingest",
                                       description="Retrieve data from API and add to S3")
-    # AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY should also be passed as env variables
     sp_ingest.add_argument('--s3path', default='s3://2022-msia423-summer-jason/data/raw/places_raw_data.csv',
                         help="If used, will load data via pandas")
 
     # Sub-parser for model training pipeline
-    sp_create = subparsers.add_parser("train_model",
+    sp_train = subparsers.add_parser("train_model",
                                       description="Import from S3, create trained model, populate RDS parameters table")
-    # AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY should also be passed as env variables
-    sp_ingest.add_argument('--s3path', default='s3://2022-msia423-summer-jason/data/raw/places_raw_data.csv',
+    sp_train.add_argument('--s3path', default='s3://2022-msia423-summer-jason/data/raw/places_raw_data.csv',
                         help="If used, will load data via pandas")
-    sp_create.add_argument("--engine_string", default=SQLALCHEMY_DATABASE_URI,
+    sp_train.add_argument("--engine_string", default=SQLALCHEMY_DATABASE_URI,
                            help="SQLAlchemy connection URI for database")
 
     args = parser.parse_args()
     sp_used = args.subparser_name
     if sp_used == 'create_db':
-        engine_string = os.getenv("SQLALCHEMY_DATABASE_URI")
-        if engine_string is None:
-            raise RuntimeError("SQLALCHEMY_DATABASE_URI environment variable not set; exiting")
-        create_db(engine_string)
+        if args.engine_string is None:
+            logger.error("SQLALCHEMY_DATABASE_URI environment variable not set; exiting")
+            sys.exit(1)
+        create_db(args.engine_string)
+        if args.definitions:
+            add_references(args.engine_string)
         # engine_string = "mysql+pymysql://user:password@host:3306/msia423_db"
+    
+    elif sp_used == 'define':
+        if args.engine_string is None:
+            logger.error("SQLALCHEMY_DATABASE_URI environment variable not set; exiting")
+            sys.exit(1)
+        add_references(args.engine_string)
 
     elif sp_used == 'ingest':
-        socrata_token = os.getenv("SOCRATA_TOKEN")
-        socrata_username = os.getenv("SOCRATA_USERNAME")
-        socrata_password = os.getenv("SOCRATA_PASSWORD")
-        raw_data = import_places_api(socrata_token,
-                                     socrata_username,
-                                     socrata_password,
+        raw_data = import_places_api(SOCRATA_TOKEN, 
+                                     SOCRATA_USERNAME, 
+                                     SOCRATA_PASSWORD,
                                      socrata_dataset_identifier=SOCRATA_DATASET_IDENTIFIER)
         upload_to_s3_pandas(raw_data,
                             args.s3path)
     
     elif sp_used == 'train_model':
 
-        with open('config/config.yaml', 'r') as f:
+        with open('config/model-config.yaml', 'r') as f:
             model_cfg = yaml.load(f, Loader = yaml.FullLoader)
         transform_data = model_cfg['transform_data']
 

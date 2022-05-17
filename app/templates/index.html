@@ -7,34 +7,54 @@
 
 <body>
     <h3>
-         <a href = "{{ url_for('index') }}">Penny Lane Music Recommender</a>
+         <a href = "{{ url_for('index') }}">PLACES Community Health Prediction</a>
     </h3>
 
     <hr/>
     <table>
          <thead>
             <tr>
-               <th>Title</th>
-               <th>Artist</th>
-               <th>Album</th>
+               <th>Category</th>
+               <th>Measure</th>
+               <th>Description</th>
             </tr>
          </thead>
 
          <tbody>
-            {% for track in tracks %}
+            {% for measure in measures %}
                <tr>
-                   <td>{{ track.title }}</td>
-                   <td>{{ track.artist }}</td>
-                   <td>{{ track.album }}</td>
+                   <td>{{ measure.category }}</td>
+                   <td>{{ measure.measureid }}</td>
+                   <td>{{ measure.short_question_text }}</td>
                </tr>
             {% endfor %}
          </tbody>
       </table>
       <form action="{{ url_for('add_entry') }}" method=post class=add-entry>
       <dl>
-        <input type=text size=15 name=title placeholder="Title">
-        <input type=text size=15 name=artist placeholder="Artist">
-        <input type=text size=15 name=album placeholder="Album">
+         <input type=text size=15 name=access2 placeholder="access2">
+         <input type=text size=15 name=access2 placeholder="arthritis">
+         <input type=text size=15 name=access2 placeholder="binge">
+         <input type=text size=15 name=access2 placeholder="bphigh">
+         <input type=text size=15 name=access2 placeholder="bpmed">
+         <input type=text size=15 name=access2 placeholder="cancer">
+         <input type=text size=15 name=access2 placeholder="casthma">
+         <input type=text size=15 name=access2 placeholder="chd">
+         <input type=text size=15 name=access2 placeholder="checkup">
+         <input type=text size=15 name=access2 placeholder="cholscreen">
+         <input type=text size=15 name=access2 placeholder="copd">
+         <input type=text size=15 name=access2 placeholder="csmoking">
+         <input type=text size=15 name=access2 placeholder="depression">
+         <input type=text size=15 name=access2 placeholder="diabetes">
+         <input type=text size=15 name=access2 placeholder="highcol">
+         <input type=text size=15 name=access2 placeholder="kidney">
+         <input type=text size=15 name=access2 placeholder="obesity">
+         <input type=text size=15 name=access2 placeholder="stroke">
+         <input type=text size=15 name=access2 placeholder="scaled_TotalPopulation">
+         <input type=text size=15 name=access2 placeholder="midwest">
+         <input type=text size=15 name=access2 placeholder="northeast">
+         <input type=text size=15 name=access2 placeholder="south">
+         <input type=text size=15 name=access2 placeholder="southwest">
         <input type=submit value=Add>
       </dl>
     </form>

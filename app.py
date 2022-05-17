@@ -1,3 +1,4 @@
+import logging
 import logging.config
 import sqlite3
 import traceback
@@ -6,7 +7,8 @@ import sqlalchemy.exc
 from flask import Flask, render_template, request, redirect, url_for
 
 # For setting up the Flask-SQLAlchemy database session
-from src.add_songs import Tracks, TrackManager
+from src.models import Measures, Features
+from src.run_pred import PredManager 
 
 # Initialize the Flask application
 app = Flask(__name__, template_folder="app/templates",
@@ -29,7 +31,7 @@ logger.debug(
     , app.config["PORT"])
 
 # Initialize the database session
-track_manager = TrackManager(app)
+pred_manager = PredManager(app)
 
 
 @app.route('/')
@@ -45,10 +47,10 @@ def index():
     """
 
     try:
-        tracks = track_manager.session.query(Tracks).limit(
+        measures = pred_manager.session.query(Measures).limit(
             app.config["MAX_ROWS_SHOW"]).all()
         logger.debug("Index page accessed")
-        return render_template('index.html', tracks=tracks)
+        return render_template('index.html', measures=measures)
     except sqlite3.OperationalError as e:
         logger.error(
             "Error page returned. Not able to query local sqlite database: %s."
@@ -76,11 +78,30 @@ def add_entry():
     """
 
     try:
-        track_manager.add_track(artist=request.form['artist'],
-                                album=request.form['album'],
-                                title=request.form['title'])
-        logger.info("New song added: %s by %s", request.form['title'],
-                    request.form['artist'])
+        pred_manager.add_input(access2=request.form['access2'],
+                               arthritis=request.form['arthritis'],
+                               binge=request.form['binge'],
+                               bphigh=request.form['bphigh'],
+                               bpmed=request.form['bpmed'],
+                               cancer=request.form['cancer'],
+                               casthma=request.form['casthma'],
+                               chd=request.form['chd'],
+                               checkup=request.form['checkup'],
+                               cholscreen=request.form['cholscreen'],
+                               copd=request.form['copd'],
+                               csmoking=request.form['csmoking'],
+                               depression=request.form['depression'],
+                               diabetes=request.form['diabetes'],
+                               highcol=request.form['highcol'],
+                               kidney=request.form['kidney'],
+                               obesity=request.form['obesity'],
+                               stroke=request.form['stroke'],
+                               scaled_TotalPopulation=request.form['scaled_TotalPopulation'],
+                               midwest=request.form['midwest'],
+                               northeast=request.form['northeast'],
+                               south=request.form['south'],
+                               southwest=request.form['southwest'])
+        logger.info("New recorded added for prediction.")
         return redirect(url_for('index'))
     except sqlite3.OperationalError as e:
         logger.error(
