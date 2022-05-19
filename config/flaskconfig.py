@@ -1,7 +1,7 @@
 import os
 DEBUG = True
 LOGGING_CONFIG = "config/logging/local.conf"
-PORT = 5001
+PORT = 5001# Change to 5000 for docker
 APP_NAME = "places"
 SQLALCHEMY_TRACK_MODIFICATIONS = True
 HOST = "0.0.0.0"
@@ -11,3 +11,5 @@ MAX_ROWS_SHOW = 100
 SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI') 
 if SQLALCHEMY_DATABASE_URI is None:
     SQLALCHEMY_DATABASE_URI = 'sqlite:///data/places.db' 
+
+SCALED_COL = "population"

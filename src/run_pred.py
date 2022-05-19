@@ -67,7 +67,7 @@ class PredManager:
                   csmoking: float,
                   depression: float,
                   diabetes: float,
-                  highcol: float,
+                  highchol: float,
                   kidney: float,
                   obesity: float,
                   stroke: float,
@@ -96,7 +96,7 @@ class PredManager:
             csmoking (float) : Proportion of county population recorded with indicated measure.
             depression (float) : Proportion of county population recorded with indicated measure.
             diabetes (float) : Proportion of county population recorded with indicated measure.
-            highcol (float) : Proportion of county population recorded with indicated measure.
+            highchol (float) : Proportion of county population recorded with indicated measure.
             kidney (float) : Proportion of county population recorded with indicated measure.
             obesity (float) : Proportion of county population recorded with indicated measure.
             stroke (float) : Proportion of county population recorded with indicated measure.
@@ -126,7 +126,7 @@ class PredManager:
                          csmoking=csmoking,
                          depression=depression,
                          diabetes=diabetes,
-                         highcol=highcol,
+                         highchol=highchol,
                          kidney=kidney,
                          obesity=obesity,
                          stroke=stroke,
@@ -139,6 +139,6 @@ class PredManager:
         session.add(input)
         session.commit()
         input_arr = [access2, arthritis, binge,	bphigh,	bpmed, cancer, casthma, chd, 
-                     checkup, cholscreen, copd, csmoking, depression, diabetes, highcol, 
+                     checkup, cholscreen, copd, csmoking, depression, diabetes, highchol, 
                      kidney, obesity, stroke, scaled_TotalPopulation]
         logger.info("New observation entered, min value: %.2f, max_value: %.2f", min(input_arr), max(input_arr))
