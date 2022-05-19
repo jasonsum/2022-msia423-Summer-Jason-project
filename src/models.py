@@ -33,7 +33,7 @@ class Features(Base):
     csmoking = sql.Column(sql.Float, unique=False, nullable=False)
     depression = sql.Column(sql.Float, unique=False, nullable=False)
     diabetes = sql.Column(sql.Float, unique=False, nullable=False)
-    highcol = sql.Column(sql.Float, unique=False, nullable=False)
+    highchol = sql.Column(sql.Float, unique=False, nullable=False)
     kidney = sql.Column(sql.Float, unique=False, nullable=False)
     obesity = sql.Column(sql.Float, unique=False, nullable=False)
     stroke = sql.Column(sql.Float, unique=False, nullable=False)
@@ -48,7 +48,7 @@ class Features(Base):
     def __repr__(self):
         return f"<Features: access2: {self.access2}, arthritis: {self.arthritis}, binge: {self.binge}, bphigh: {self.bphigh}, bpmed: {self.bpmed}, cancer: {self.cancer}, \
                 casthma: {self.casthma}, chd: {self.chd}, checkup: {self.checkup}, cholscreen: {self.cholscreen}, copd: {self.copd}, csmoking: {self.csmoking}, depression: {self.depression}, \
-                diabetes: {self.diabetes}, highcol: {self.highcol}, kidney: {self.kidney}, obesity: {self.obesity}, stroke: {self.stroke}, scaled_TotalPopulation: {self.scaled_TotalPopulation}, \
+                diabetes: {self.diabetes}, highchol: {self.highchol}, kidney: {self.kidney}, obesity: {self.obesity}, stroke: {self.stroke}, scaled_TotalPopulation: {self.scaled_TotalPopulation}, \
                 midwest: {self.midwest}, northeast: {self.northeast}, south: {self.south}, southwest: {self.southwest}>"
 
 class Parameters(Base):
@@ -71,23 +71,21 @@ class Parameters(Base):
     csmoking = sql.Column(sql.Float, unique=False, nullable=False)
     depression = sql.Column(sql.Float, unique=False, nullable=False)
     diabetes = sql.Column(sql.Float, unique=False, nullable=False)
-    highcol = sql.Column(sql.Float, unique=False, nullable=False)
+    highchol = sql.Column(sql.Float, unique=False, nullable=False)
     kidney = sql.Column(sql.Float, unique=False, nullable=False)
     obesity = sql.Column(sql.Float, unique=False, nullable=False)
     stroke = sql.Column(sql.Float, unique=False, nullable=False)
-    scaled_TotalPopulation = sql.Column(sql.Float, unique=False, nullable=False)
+    scaled_totalpopulation = sql.Column(sql.Float, unique=False, nullable=False)
     midwest = sql.Column(sql.Float, unique=False, nullable=False)
     northeast = sql.Column(sql.Float, unique=False, nullable=False)
     south = sql.Column(sql.Float, unique=False, nullable=False)
     southwest = sql.Column(sql.Float, unique=False, nullable=False)
     intercept = sql.Column(sql.Float, unique=False, nullable=False)
-    scaled_max = sql.Column(sql.Integer, unique=False, nullable=True)
-    scaled_min = sql.Column(sql.Integer, unique=False, nullable=True)
 
     def __repr__(self):
         return f"<Parameters: access2: {self.access2}, arthritis: {self.arthritis}, binge: {self.binge}, bphigh: {self.bphigh}, bpmed: {self.bpmed}, cancer: {self.cancer}, \
                 casthma: {self.casthma}, chd: {self.chd}, checkup: {self.checkup}, cholscreen: {self.cholscreen}, copd: {self.copd}, csmoking: {self.csmoking}, depression: {self.depression}, \
-                diabetes: {self.diabetes}, highcol: {self.highcol}, kidney: {self.kidney}, obesity: {self.obesity}, stroke: {self.stroke}, scaled_TotalPopulation: {self.scaled_TotalPopulation}, \
+                diabetes: {self.diabetes}, highchol: {self.highchol}, kidney: {self.kidney}, obesity: {self.obesity}, stroke: {self.stroke}, scaled_TotalPopulation: {self.scaled_TotalPopulation}, \
                 midwest: {self.midwest}, northeast: {self.northeast}, south: {self.south}, southwest: {self.southwest}, \
                 intercept: {self.intercept}>"
 

@@ -14,7 +14,7 @@ from src.retrieve_data import import_places_api, upload_to_s3_pandas
 from src.models import create_db
 from src.add_definitions import add_references
 from src.transform_data import import_from_s3, prep_data, scale_values, one_hot_encode
-from src.run_model import validate_clean, train_model
+from src.run_model import validate_clean, fit_model, add_params
 from data.reference.state_region_mapping import states_region_mapping
 
 logging.config.fileConfig('config/logging/local.conf')
@@ -116,19 +116,18 @@ if __name__ == '__main__':
     elif sp_used == 'train_model':
         train_model = model_cfg['train_model']
         # Model parameters will be written to parameters table post-training
-        engine_string = os.getenv("SQLALCHEMY_DATABASE_URI")
-        if engine_string is None:
-            raise RuntimeError("SQLALCHEMY_DATABASE_URI environment variable not set; exiting")
+        if args.engine_string is None:
+            logger.error("SQLALCHEMY_DATABASE_URI environment variable not set; exiting")
+            sys.exit(1)
         places_df = import_from_s3(args.s3path,
                                    train_model['features'] + [train_model['response']])
         validate_clean(places_df, train_model['features'] + [train_model['response']])
-        coeffs, intercept = train_model(places_df,
-                             train_model['method'],
-                             train_model['features'],
-                             train_model['response'],
-                             engine_string,
-                             **train_model['params'])
-        logger.info("HELLO")
+        params = fit_model(places_df,
+                          train_model['method'],
+                          train_model['features'],
+                          train_model['response'],
+                          **train_model['params'])
+        add_params(args.engine_string, params)
 
     else:
         parser.print_help()
