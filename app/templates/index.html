@@ -1,17 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <link href="static/basic.css" rel="stylesheet">
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1">
+   <link href="static/basic.css" rel="stylesheet">
+   <h1>CDC PLACES Community Health Estimator</h1>
+   
 </head>
 
 <body>
+   
     <h3>
-         <a href = "{{ url_for('index') }}">PLACES Community Health Prediction</a>
+         <a href = "{{ url_for('index') }}"></a>
     </h3>
 
-    <hr/>
-    <table>
+    <!-- <hr/> -->
+    <!-- <table>
          <thead>
             <tr>
                <th>Category</th>
@@ -19,7 +23,6 @@
                <th>Description</th>
             </tr>
          </thead>
-
          <tbody>
             {% for measure in measures %}
                <tr>
@@ -29,35 +32,64 @@
                </tr>
             {% endfor %}
          </tbody>
-      </table>
+      </table> -->
+      <!-- <div class="slider-container">
+            <input type="range" min="0" max="100" value="50" class="slider" id="myRange">
+            <span id="demo">0</span>
+      </div> -->
       <form action="{{ url_for('add_entry') }}" method=post class=add-entry>
-      <dl>
-         <input type=text size=15 name=access2 placeholder="access2">
-         <input type=text size=15 name=access2 placeholder="arthritis">
-         <input type=text size=15 name=access2 placeholder="binge">
-         <input type=text size=15 name=access2 placeholder="bphigh">
-         <input type=text size=15 name=access2 placeholder="bpmed">
-         <input type=text size=15 name=access2 placeholder="cancer">
-         <input type=text size=15 name=access2 placeholder="casthma">
-         <input type=text size=15 name=access2 placeholder="chd">
-         <input type=text size=15 name=access2 placeholder="checkup">
-         <input type=text size=15 name=access2 placeholder="cholscreen">
-         <input type=text size=15 name=access2 placeholder="copd">
-         <input type=text size=15 name=access2 placeholder="csmoking">
-         <input type=text size=15 name=access2 placeholder="depression">
-         <input type=text size=15 name=access2 placeholder="diabetes">
-         <input type=text size=15 name=access2 placeholder="highcol">
-         <input type=text size=15 name=access2 placeholder="kidney">
-         <input type=text size=15 name=access2 placeholder="obesity">
-         <input type=text size=15 name=access2 placeholder="stroke">
-         <input type=text size=15 name=access2 placeholder="scaled_TotalPopulation">
-         <input type=text size=15 name=access2 placeholder="midwest">
-         <input type=text size=15 name=access2 placeholder="northeast">
-         <input type=text size=15 name=access2 placeholder="south">
-         <input type=text size=15 name=access2 placeholder="southwest">
-        <input type=submit value=Add>
-      </dl>
-    </form>
+         <div class="m-5" >
+      <dl> 
+         <h3>Community Health Outcome Measurements</h3>
+         {% for measure in hlth_outcomes %}
+         <p>
+         <label for="customRange1" class="form-label">{{ measure.short_question_text }}</label>
+         <input name="{{ measure.measureid }}" type="range" class="form-range" id="{{ measure.measureid }}"
+                min="0" max="100">
+         </p>
+         {% endfor %}
 
+         <h3>Community Health Risk Behavior Measurements</h3>
+         {% for measure in hlth_behaviors %}
+         <p>
+         <label for="customRange1" class="form-label">{{ measure.short_question_text }}</label>
+         <input name="{{ measure.measureid }}" type="range" class="form-range" id="{{ measure.measureid }}"
+                min="0" max="100">
+         </p>
+         {% endfor %}
+         <h3>Community Preventative Measurements</h3>
+         {% for measure in hlth_prevention %}
+         <p>
+         <label for="customRange1" class="form-label">{{ measure.short_question_text }}</label>
+         <input name="{{ measure.measureid }}" type="range" class="form-range" id="{{ measure.measureid }}"
+                min="0" max="100">
+         </p>
+         {% endfor %}
+         <h3>Community Demographics</h3>
+         <p>
+         <label for="customRange1" class="form-label">Community Population</label>
+         <input name="population" type="range" class="form-range" id="population"
+                min="0" max="100000", value="5000">
+         </p>
+         <div class="form-check form-check-inline">
+            {% for region in ["midwest", "northeast", "south", "southwest", "west"] %}
+            <input class="form-check-input" type="radio" name="region" id="{{region}}" value="{{region}}" checked>
+            <label class="form-check-label"> {{ region }} </label>
+            {% endfor %}
+          </div>
+          <button type="submit" class="btn btn-primary">Submit</button>
+      </dl>
+   </div>
+    </form>
+    
+    <script>
+      var slider = document.getElementById("myRange");
+      var output = document.getElementById("demo");
+      output.innerHTML = slider.value;
+      
+      slider.oninput = function() {
+        output.innerHTML = this.value;
+      }
+      </script>
 </body>
 </html>

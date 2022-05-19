@@ -7,7 +7,7 @@ import sqlalchemy.exc
 from flask import Flask, render_template, request, redirect, url_for
 
 # For setting up the Flask-SQLAlchemy database session
-from src.models import Measures, Features
+from src.models import Measures, Features, scalerRanges
 from src.run_pred import PredManager 
 
 # Initialize the Flask application
@@ -33,6 +33,29 @@ logger.debug(
 # Initialize the database session
 pred_manager = PredManager(app)
 
+# Load in scaling and model objects
+try:
+    scaler_range = pred_manager.session.query(scalerRanges).filter_by(valuename="TotalPopulation").first()
+    min_value = scaler_range.min_value
+    max_value = scaler_range.max_value
+    logger.info("Min-max scaling values loaded.")
+except sqlite3.OperationalError as e:
+    logger.error(
+        "Error page returned. Not able to query local sqlite database: %s."
+        " Error: %s ",
+        app.config['SQLALCHEMY_DATABASE_URI'], e)
+    render_template('error.html')
+except sqlalchemy.exc.OperationalError as e:
+    logger.error(
+        "Error page returned. Not able to query MySQL database: %s. "
+        "Error: %s ",
+        app.config['SQLALCHEMY_DATABASE_URI'], e)
+    render_template('error.html')
+except:
+    traceback.print_exc()
+    logger.error("Not able to display table results, error page returned")
+    render_template('error.html')
+
 
 @app.route('/')
 def index():
@@ -47,10 +70,17 @@ def index():
     """
 
     try:
-        measures = pred_manager.session.query(Measures).limit(
+        hlth_outcomes = pred_manager.session.query(Measures).filter_by(category="health outcomes").limit(
+            app.config["MAX_ROWS_SHOW"]).all()
+        hlth_behaviors = pred_manager.session.query(Measures).filter_by(category="health risk behaviors").limit(
+            app.config["MAX_ROWS_SHOW"]).all()
+        hlth_prevention = pred_manager.session.query(Measures).filter_by(category="prevention").limit(
             app.config["MAX_ROWS_SHOW"]).all()
         logger.debug("Index page accessed")
-        return render_template('index.html', measures=measures)
+        return render_template('index.html', 
+                               hlth_outcomes=hlth_outcomes,
+                               hlth_behaviors=hlth_behaviors,
+                               hlth_prevention=hlth_prevention)
     except sqlite3.OperationalError as e:
         logger.error(
             "Error page returned. Not able to query local sqlite database: %s."
@@ -65,47 +95,59 @@ def index():
         return render_template('error.html')
     except:
         traceback.print_exc()
-        logger.error("Not able to display tracks, error page returned")
+        logger.error("Not able to display table results, error page returned")
         return render_template('error.html')
 
 
 @app.route('/add', methods=['POST'])
 def add_entry():
-    """View that process a POST with new song input
+    """View that process a POST to Features table
 
     Returns:
         redirect to index page
     """
 
+    # parse region radio button
+    # west is used as omitted dummy variable
+    regions = {'midwest':0 ,
+               'northeast':0,
+               'south':0, 
+               'southwest':0}
+    for k, v in regions.items():
+        if k == request.form['region']:
+            regions[k] = 1
+
+    scaled_TotalPopulation = (float(request.form['population']) - min_value)/(max_value-min_value)
+
     try:
-        pred_manager.add_input(access2=request.form['access2'],
-                               arthritis=request.form['arthritis'],
-                               binge=request.form['binge'],
-                               bphigh=request.form['bphigh'],
-                               bpmed=request.form['bpmed'],
-                               cancer=request.form['cancer'],
-                               casthma=request.form['casthma'],
-                               chd=request.form['chd'],
-                               checkup=request.form['checkup'],
-                               cholscreen=request.form['cholscreen'],
-                               copd=request.form['copd'],
-                               csmoking=request.form['csmoking'],
-                               depression=request.form['depression'],
-                               diabetes=request.form['diabetes'],
-                               highcol=request.form['highcol'],
-                               kidney=request.form['kidney'],
-                               obesity=request.form['obesity'],
-                               stroke=request.form['stroke'],
-                               scaled_TotalPopulation=request.form['scaled_TotalPopulation'],
-                               midwest=request.form['midwest'],
-                               northeast=request.form['northeast'],
-                               south=request.form['south'],
-                               southwest=request.form['southwest'])
+        pred_manager.add_input(access2=float(request.form['access2'])/100,
+                               arthritis=float(request.form['arthritis'])/100,
+                               binge=float(request.form['binge'])/100,
+                               bphigh=float(request.form['bphigh'])/100,
+                               bpmed=float(request.form['bpmed'])/100,
+                               cancer=float(request.form['cancer'])/100,
+                               casthma=float(request.form['casthma'])/100,
+                               chd=float(request.form['chd'])/100,
+                               checkup=float(request.form['checkup'])/100,
+                               cholscreen=float(request.form['cholscreen'])/100,
+                               copd=float(request.form['copd'])/100,
+                               csmoking=float(request.form['csmoking'])/100,
+                               depression=float(request.form['depression'])/100,
+                               diabetes=float(request.form['diabetes'])/100,
+                               highcol=float(request.form['highcol'])/100,
+                               kidney=float(request.form['kidney'])/100,
+                               obesity=float(request.form['obesity'])/100,
+                               stroke=float(request.form['stroke'])/100,
+                               scaled_TotalPopulation=scaled_TotalPopulation,
+                               midwest=int(regions['midwest']),
+                               northeast=int(regions['northeast']),
+                               south=int(regions['south']),
+                               southwest=int(regions['southwest']))
         logger.info("New recorded added for prediction.")
         return redirect(url_for('index'))
     except sqlite3.OperationalError as e:
         logger.error(
-            "Error page returned. Not able to add song to local sqlite "
+            "Error page returned. Not able to add new record to database"
             "database: %s. Error: %s ",
             app.config['SQLALCHEMY_DATABASE_URI'], e)
         return render_template('error.html')
