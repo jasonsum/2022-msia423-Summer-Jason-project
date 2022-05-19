@@ -12,8 +12,9 @@ import sqlalchemy
 import sqlalchemy.orm
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import desc
 
-from src.models import Features, Parameters, Measures
+from src.models import Features, Parameters, Measures, scalerRanges
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +50,7 @@ class PredManager:
 
         """
         self.session.close()
+          
 
     def add_input(self, 
                   access2: float,
@@ -70,10 +72,10 @@ class PredManager:
                   obesity: float,
                   stroke: float,
                   scaled_TotalPopulation: float,
-                  midwest: float,
-                  northeast: float,
-                  south: float,
-                  southwest: float
+                  midwest: int,
+                  northeast: int,
+                  south: int,
+                  southwest: int
                   ) -> None:
         """Seeds an existing database with new user feature input values.
 
@@ -132,11 +134,11 @@ class PredManager:
                          midwest=midwest,
                          northeast=northeast,
                          south=south,
-                         southwest=southwest,)
+                         southwest=southwest)
+        
         session.add(input)
         session.commit()
         input_arr = [access2, arthritis, binge,	bphigh,	bpmed, cancer, casthma, chd, 
                      checkup, cholscreen, copd, csmoking, depression, diabetes, highcol, 
-                     kidney, obesity, stroke, scaled_TotalPopulation, midwest, northeast,
-                     south, southwest]
+                     kidney, obesity, stroke, scaled_TotalPopulation]
         logger.info("New observation entered, min value: %.2f, max_value: %.2f", min(input_arr), max(input_arr))

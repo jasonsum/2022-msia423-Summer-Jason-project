@@ -18,7 +18,7 @@ class Features(Base):
 
     __tablename__ = "features"
 
-    id = sql.Column(sql.Float, primary_key=True)
+    id = sql.Column(sql.Integer, primary_key=True)
     access2 = sql.Column(sql.Float, unique=False, nullable=False)
     arthritis = sql.Column(sql.Float, unique=False, nullable=False)
     binge = sql.Column(sql.Float, unique=False, nullable=False)
@@ -38,10 +38,10 @@ class Features(Base):
     obesity = sql.Column(sql.Float, unique=False, nullable=False)
     stroke = sql.Column(sql.Float, unique=False, nullable=False)
     scaled_TotalPopulation = sql.Column(sql.Float, unique=False, nullable=False)
-    midwest = sql.Column(sql.Float, unique=False, nullable=False)
-    northeast = sql.Column(sql.Float, unique=False, nullable=False)
-    south = sql.Column(sql.Float, unique=False, nullable=False)
-    southwest = sql.Column(sql.Float, unique=False, nullable=False)
+    midwest = sql.Column(sql.Integer, unique=False, nullable=False)
+    northeast = sql.Column(sql.Integer, unique=False, nullable=False)
+    south = sql.Column(sql.Integer, unique=False, nullable=False)
+    southwest = sql.Column(sql.Integer, unique=False, nullable=False)
     logit_ghlth = sql.Column(sql.Float, unique=False, nullable=True)
     ghlth = sql.Column(sql.Float, unique=False, nullable=True)
 
@@ -81,6 +81,8 @@ class Parameters(Base):
     south = sql.Column(sql.Float, unique=False, nullable=False)
     southwest = sql.Column(sql.Float, unique=False, nullable=False)
     intercept = sql.Column(sql.Float, unique=False, nullable=False)
+    scaled_max = sql.Column(sql.Integer, unique=False, nullable=True)
+    scaled_min = sql.Column(sql.Integer, unique=False, nullable=True)
 
     def __repr__(self):
         return f"<Parameters: access2: {self.access2}, arthritis: {self.arthritis}, binge: {self.binge}, bphigh: {self.bphigh}, bpmed: {self.bpmed}, cancer: {self.cancer}, \
@@ -88,6 +90,19 @@ class Parameters(Base):
                 diabetes: {self.diabetes}, highcol: {self.highcol}, kidney: {self.kidney}, obesity: {self.obesity}, stroke: {self.stroke}, scaled_TotalPopulation: {self.scaled_TotalPopulation}, \
                 midwest: {self.midwest}, northeast: {self.northeast}, south: {self.south}, southwest: {self.southwest}, \
                 intercept: {self.intercept}>"
+
+class scalerRanges(Base):
+    """Creates a table of min-max values of scaled features."""
+
+    __tablename__ = "scaler_ranges"
+
+    id = sql.Column(sql.Integer, primary_key=True)
+    valuename = sql.Column(sql.String(100), unique=False, nullable=True)
+    max_value = sql.Column(sql.Float, unique=False, nullable=True)
+    min_value = sql.Column(sql.Float, unique=False, nullable=True)
+
+    def __repr__(self):
+        return f"<Column: access2: {self.valuename}, max: {self.max_value}, min: {self.min_value}>"
 
 class Measures(Base):
     """Creates a table of references for PLACES measures."""

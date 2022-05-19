@@ -15,14 +15,14 @@ transform_data:
     invalid_measures: [TEETHLOST, SLEEP, MAMMOUSE, DENTAL, COREW, COREM, COLON_SCREEN, CERVICAL, LPA, MHLTH, PHLTH]
     make_floats: [ACCESS2, ARTHRITIS, BINGE, BPHIGH, BPMED, CANCER, CASTHMA, CHD, CHECKUP, CHOLSCREEN, COPD, CSMOKING, DEPRESSION, DIABETES, GHLTH, HIGHCHOL, KIDNEY, OBESITY, STROKE]
     make_logit: GHLTH
-    min_max_scale: TotalPopulation
+  scale_values:
+    columns: TotalPopulation
   one_hot_encode:
     states_region: True 
 train_model:
   method: LinearRegression
-  divide_x_y:
-    response: GHLTH
-    feature_list: [ACCESS2, ARTHRITIS, BINGE, BPHIGH, BPMED, CANCER, CASTHMA, CHD, CHECKUP, CHOLSCREEN, COPD, CSMOKING, DEPRESSION, DIABETES, HIGHCHOL, KIDNEY, OBESITY, STROKE, scaled_TotalPopulation, Midwest, Northeast, South, Southwest]
+  features: [ACCESS2, ARTHRITIS, BINGE, BPHIGH, BPMED, CANCER, CASTHMA, CHD, CHECKUP, CHOLSCREEN, COPD, CSMOKING, DEPRESSION, DIABETES, HIGHCHOL, KIDNEY, OBESITY, STROKE, scaled_TotalPopulation, Midwest, Northeast, South, Southwest]
+  response: GHLTH
   params:
      fit_intercept: True
 

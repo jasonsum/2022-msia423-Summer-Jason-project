@@ -40,7 +40,7 @@ def create_references(engine : sql.engine.base.Engine):
     depression = Measures(category="health outcomes", measureid="depression", short_question_text="depression")
     diabetes = Measures(category="health outcomes", measureid="diabetes", short_question_text="diabetes")
     bphigh = Measures(category="health outcomes", measureid="bphigh", short_question_text="high blood pressure")
-    highchol = Measures(category="health outcomes", measureid="highchol", short_question_text="high cholesterol")
+    highchol = Measures(category="health outcomes", measureid="highcol", short_question_text="high cholesterol")
     obesity = Measures(category="health outcomes", measureid="obesity", short_question_text="obesity")
     stroke = Measures(category="health outcomes", measureid="stroke", short_question_text="stroke")
     binge = Measures(category="health risk behaviors", measureid="binge", short_question_text="binge drinking")
@@ -52,7 +52,7 @@ def create_references(engine : sql.engine.base.Engine):
     bpmed = Measures(category="prevention", measureid="bpmed", short_question_text="taking bp medication")
     checkup = Measures(category="prevention", measureid="checkup", short_question_text="annual checkup")
     
-    session.execute("DELETE FROM Measures")
+    session.query(Measures).delete()
 
     session.add_all([
                     arthritis,

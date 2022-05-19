@@ -1,5 +1,6 @@
 """
-Module imports conducts minor transformations in preparation of modeling
+Module imports raw data from s3, conducts data transformations in preparation of modeling, 
+and writes clean to s3.
 """
 
 import typing
@@ -9,27 +10,16 @@ import sys
 
 import pandas as pd
 import numpy as np
+import botocore
 from sodapy import Socrata
+import sqlalchemy as sql
+import sqlalchemy.exc
+import sqlalchemy.orm
+from sqlalchemy.ext.declarative import declarative_base
+
+from src.models import scalerRanges
 
 logger = logging.getLogger(__name__)
-
-# sourced from https://gist.github.com/sfirrin/fd01d87f022d80e98c37a045c14109fe
-states_region_mapping : typing.Dict[str, str] = {
-    'Washington': 'West', 'Oregon': 'West', 'California': 'West', 'Nevada': 'West',
-    'Idaho': 'West', 'Montana': 'West', 'Wyoming': 'West', 'Utah': 'West',
-    'Colorado': 'West', 'Alaska': 'West', 'Hawaii': 'West', 'Maine': 'Northeast',
-    'Vermont': 'Northeast', 'New York': 'Northeast', 'New Hampshire': 'Northeast',
-    'Massachusetts': 'Northeast', 'Rhode Island': 'Northeast', 'Connecticut': 'Northeast',
-    'New Jersey': 'Northeast', 'Pennsylvania': 'Northeast', 'North Dakota': 'Midwest',
-    'South Dakota': 'Midwest', 'Nebraska': 'Midwest', 'Kansas': 'Midwest',
-    'Minnesota': 'Midwest', 'Iowa': 'Midwest', 'Missouri': 'Midwest', 'Wisconsin': 'Midwest',
-    'Illinois': 'Midwest', 'Michigan': 'Midwest', 'Indiana': 'Midwest', 'Ohio': 'Midwest',
-    'West Virginia': 'South', 'District of Columbia': 'South', 'Maryland': 'South',
-    'Virginia': 'South', 'Kentucky': 'South', 'Tennessee': 'South', 'North Carolina': 'South',
-    'Mississippi': 'South', 'Arkansas': 'South', 'Louisiana': 'South', 'Alabama': 'South',
-    'Georgia': 'South', 'South Carolina': 'South', 'Florida': 'South', 'Delaware': 'South',
-    'Arizona': 'Southwest', 'New Mexico': 'Southwest', 'Oklahoma': 'Southwest',
-    'Texas': 'Southwest'}
 
 def import_from_s3(s3path: str,
                    columns : typing.Optional[typing.List[str]] = None,
@@ -39,7 +29,7 @@ def import_from_s3(s3path: str,
 
     Function imports csv data from s3 and generates
     pandas dataframe from entire csv.
-    Pandas dataframe has columns passed through columns parameter
+    Pandas dataframe has columns passed through columns parameter.
 
     Args:
         s3path (str) : Url of s3 bucket
@@ -59,16 +49,22 @@ def import_from_s3(s3path: str,
     except botocore.exceptions.NoCredentialsError:
         logger.error('Please provide AWS credentials via AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY env variables.')
         sys.exit(1)
+    except KeyError:
+        logger.error('The selected columns were not found in the dataframe.')
+        sys.exit(1)
+    except ValueError:
+        logger.error('The selected columns were not found in the dataframe.')
     else:
+        if 'Data_Value' in places.columns:
         # Drop row with NA data_value
-        places = places.drop(places.loc[places.Data_Value.isna()].index, axis=0)
+            places = places.drop(places.loc[places.Data_Value.isna()].index, axis=0)
         logger.info("Imported places, valid row count is %i", places.shape[0])
 
     return places
 
 def validate_import(places_df: pd.DataFrame) -> None:
     """
-    Performs validation of PLACES data imported from S3.
+    Performs validation of raw PLACES data imported from S3.
 
     Args:
         places_df (dataframe) : Dataframe from PLACES csv import.
@@ -168,18 +164,81 @@ def drop_invalid_measures(places_pivot : pd.DataFrame,
     
     return places_pivot
 
+def create_range(engine: sql.engine.base.Engine,
+                 valuename : str,
+                 max : float,
+                 min: float):
+    """
+    Adds min-max values of features for scaling.
+
+    Args:
+        engine (sql.engine.base.Engine) : SQL Alchemy engine object.
+        valuename (str) : Field name being scaled.
+        max (float) : Maximum value of field.
+        min (float) : Minimum value of field.
+
+    Returns:
+        None
+
+    """
+
+    Base = declarative_base()
+
+    # create a db session
+    Session : sqlalchemy.orm.session.sessionmaker = sqlalchemy.orm.sessionmaker(bind=engine)
+    session : sqlalchemy.orm.session.Session = Session()
+
+    sc_range = scalerRanges(valuename = valuename,
+                            max_value = max,
+                            min_value = min)
+    session.add(sc_range)
+    session.commit()
+    logger.info("Scaling range added.")
+
+def add_range(engine_string : str,
+              valuename,
+              max,
+              min) -> None:
+    """
+    Populates rangeScaler table with field
+    min and max value(s).
+
+    Args:
+        engine_string (str) : SQL Alchemy database URI path.
+        valuename (str) : Field name being scaled.
+        max (float) : Maximum value of field.
+        min (float) : Minimum value of field.
+
+    Returns:
+        None
+
+    """
+    engine : sql.engine.base.Engine = sql.create_engine(engine_string)
+
+    # test database connection
+    try:
+        engine.connect()
+    except sqlalchemy.exc.OperationalError as e:
+        logger.error("Could not connect to database!")
+        logger.debug("Database URI: %s", )
+        raise e
+
+    # add range row to table
+    create_range(engine,
+                 valuename,
+                 max,
+                 min)
+
 
 def reformat_measures(places_pivot : pd.DataFrame,
                       make_floats : typing.List[str],
-                      make_logit : typing.Optional[str],
-                      min_max_scale : typing.Optional[typing.Union[str, typing.List[str]]]
+                      make_logit : typing.Optional[str]
                       ) -> pd.DataFrame:
     """
     Conducts minor data transformations to measures of places_pivot.
 
     Transforms integer proportions with floats [0,1] representing decimal proportions.
     Creates a log-odds column to be used in regression of a proportion. 
-    Min-max scales columns to a range of [0,1].
 
     Args:
         places_pivot (dataframe) : Pivoted dataframe of PLACES data.
@@ -188,7 +247,6 @@ def reformat_measures(places_pivot : pd.DataFrame,
                              reformat to [0,1] proportions.
         make_logit (str) : Field name to transform into log-odds.
                            Should be used to transform response variable into log-odds.
-        min_max_scale (str) : Field name(s) to scale to [0,1] using min-max scaling.
 
     Returns:
         pandas dataframe: PLACES dataframe with reformatted column measures
@@ -199,19 +257,38 @@ def reformat_measures(places_pivot : pd.DataFrame,
     if make_logit:
         places_pivot[make_logit] = np.log(places_pivot[make_logit] / (1 - places_pivot[make_logit]))
 
-    # Standardize columns with min-max scaling to [0,1]
-    if min_max_scale:
-        if isinstance(min_max_scale, str):
-            places_pivot['scaled_' + min_max_scale] = (places_pivot[min_max_scale] \
-                                                    - places_pivot[min_max_scale].min())  \
-                                                / (places_pivot[min_max_scale].max() \
-                                                    - places_pivot[min_max_scale].min())
-        if isinstance(min_max_scale, list):
-            for i in min_max_scale:
-                places_pivot['scaled_' + i] = (places_pivot[i] \
-                                                        - places_pivot[i].min())  \
-                                                    / (places_pivot[i].max() \
-                                                        - places_pivot[i].min())
+    return places_pivot
+
+def scale_values(engine_string : str,
+                 places_pivot : pd.DataFrame,
+                 columns : typing.Union[str, typing.List[str]]) -> pd.DataFrame:
+    """
+    Scales columns using min-max scaling.
+
+    Min-max scales columns to a range of [0,1]. Min and max values are added, with
+    column name as reference, to scaler_ranges table.
+
+    Args:
+        engine_string (str) : SQL Alchemy database URI path.
+        places_pivot (dataframe) : Pivoted dataframe of PLACES data.
+                                   See pivot_places return.
+        min_max_scale (str) : Field name(s) to scale to [0,1] using min-max scaling.
+
+    Returns:
+        pandas dataframe: PLACES dataframe with reformatted column measures
+
+    """
+    
+    if isinstance(columns, str):
+        columns = [columns]
+    for col in columns: 
+        min_value = places_pivot[col].min()
+        max_value = places_pivot[col].max()
+        places_pivot['scaled_' + col] = (places_pivot[col]-min_value) / (max_value - min_value)
+        add_range(engine_string,
+                  col,
+                  min_value,
+                  max_value)
     return places_pivot
 
 
@@ -246,14 +323,12 @@ def prep_data(places_df : pd.DataFrame,
               response : str,
               invalid_measures : typing.List[str],
               make_floats : typing.List[str],
-              make_logit : typing.Optional[str],
-              min_max_scale : typing.Optional[typing.Union[str, typing.List[str]]]) -> pd.DataFrame:
+              make_logit : typing.Optional[str]) -> pd.DataFrame:
     """
     Helper function that conducts data transformations of PLACES data.
 
     Function pivots to create one row per
     county, and performs minor filtering and transformations.
-    Output will have PLACES measure prepared for modeling.
 
     Args:
         places_df (dataframe) : Dataframe from PLACES csv import.
@@ -265,7 +340,6 @@ def prep_data(places_df : pd.DataFrame,
                              reformat to [0,1] proportions.
         make_logit (str) : Field name to transform into log-odds.
                            Should be used to transform response variable into log-odds.
-        min_max_scale (str, list) : Field name(s) to scale to [0,1] using min-max scaling.
 
     Returns:
         pandas dataframe: PLACES dataframe with one row per county
@@ -275,6 +349,6 @@ def prep_data(places_df : pd.DataFrame,
     places_pivot = drop_null_responses(places_pivot, response)
     places_pivot = drop_invalid_measures(places_pivot, invalid_measures)
     places_pivot = reformat_measures(places_pivot, make_floats,
-                                     make_logit, min_max_scale)
+                                     make_logit)
 
     return places_pivot

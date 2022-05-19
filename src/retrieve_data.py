@@ -121,4 +121,4 @@ def upload_to_s3_pandas(input_df: pd.DataFrame,
     except botocore.exceptions.NoCredentialsError:
         logger.error('Please provide AWS credentials via AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY env variables.')
     else:
-        logger.info('PLACES data uploaded from to %s', s3path)
+        logger.info('PLACES data uploaded to %s', s3path)
