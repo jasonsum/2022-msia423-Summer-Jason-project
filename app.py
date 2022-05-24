@@ -59,7 +59,7 @@ except:
 
 @app.route('/')
 def index():
-    """Main view that lists songs in the database.
+    """Main view that lists measurements in the database.
 
     Create view into index page that uses data queried from Track database and
     inserts it into the app/templates/index.html template.
@@ -80,7 +80,8 @@ def index():
         return render_template('index.html', 
                                hlth_outcomes=hlth_outcomes,
                                hlth_behaviors=hlth_behaviors,
-                               hlth_prevention=hlth_prevention)
+                               hlth_prevention=hlth_prevention,
+                               prediction="")
     except sqlite3.OperationalError as e:
         logger.error(
             "Error page returned. Not able to query local sqlite database: %s."
@@ -119,8 +120,15 @@ def add_entry():
 
     scaled_totalpopulation = (float(request.form['population']) - min_value)/(max_value-min_value)
 
+    hlth_outcomes = pred_manager.session.query(Measures).filter_by(category="health outcomes").limit(
+            app.config["MAX_ROWS_SHOW"]).all()
+    hlth_behaviors = pred_manager.session.query(Measures).filter_by(category="health risk behaviors").limit(
+        app.config["MAX_ROWS_SHOW"]).all()
+    hlth_prevention = pred_manager.session.query(Measures).filter_by(category="prevention").limit(
+        app.config["MAX_ROWS_SHOW"]).all()
+    
     try:
-        pred_manager.add_input(access2=float(request.form['access2'])/100,
+        prob = pred_manager.add_input(access2=float(request.form['access2'])/100,
                                arthritis=float(request.form['arthritis'])/100,
                                binge=float(request.form['binge'])/100,
                                bphigh=float(request.form['bphigh'])/100,
@@ -144,9 +152,14 @@ def add_entry():
                                south=int(regions['south']),
                                southwest=int(regions['southwest']))
         logger.info("New recorded added for prediction.")
-        pred_manager.generate_pred()
-        pred_manager.remove_inputs()
-        return redirect(url_for('index'))
+        #pred = pred_manager.generate_pred()
+        #pred_manager.remove_inputs()
+        #return redirect(url_for('index'))
+        return render_template('index.html', 
+                               hlth_outcomes=hlth_outcomes,
+                               hlth_behaviors=hlth_behaviors,
+                               hlth_prevention=hlth_prevention,
+                               prediction=str(prob))
     except sqlite3.OperationalError as e:
         logger.error(
             "Error page returned. Not able to add new record to database"

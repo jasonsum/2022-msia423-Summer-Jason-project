@@ -77,7 +77,7 @@ class PredManager:
                   northeast: int,
                   south: int,
                   southwest: int
-                  ) -> None:
+                  ) -> float:
         """Seeds an existing database with new user feature input values.
 
         See Measures table or reference information for more information about each measure.
@@ -112,6 +112,38 @@ class PredManager:
         """
 
         session = self.session
+        coeffs = session.query(Parameters).first()
+        # Generate prediction
+        pred = (coeffs.access2 * access2 + 
+                coeffs.arthritis * arthritis + 
+                coeffs.binge * binge + 
+                coeffs.bphigh * bphigh + 
+                coeffs.bpmed * bpmed + 
+                coeffs.cancer * cancer + 
+                coeffs.casthma * casthma + 
+                coeffs.chd * chd + 
+                coeffs.checkup * checkup + 
+                coeffs.cholscreen * cholscreen + 
+                coeffs.copd * copd + 
+                coeffs.csmoking * csmoking + 
+                coeffs.depression * depression + 
+                coeffs.diabetes * diabetes + 
+                coeffs.highchol * highchol + 
+                coeffs.kidney * kidney + 
+                coeffs.obesity * obesity + 
+                coeffs.stroke * stroke + 
+                coeffs.scaled_totalpopulation * scaled_totalpopulation + 
+                coeffs.midwest * midwest + 
+                coeffs.northeast * northeast + 
+                coeffs.south * south + 
+                coeffs.southwest * southwest + 
+                coeffs.intercept) 
+        
+        # Capture probability from log-odds
+        # prob = odds / (1 + odds)
+        prob = math.exp(pred) / (1 + math.exp(pred))
+
+        # Record new prediction
         input = Features(access2=access2,
                          arthritis=arthritis,
                          binge=binge,
@@ -134,61 +166,13 @@ class PredManager:
                          midwest=midwest,
                          northeast=northeast,
                          south=south,
-                         southwest=southwest)
+                         southwest=southwest,
+                         prediction=prob)
         
         session.add(input)
         session.commit()
-        input_arr = [access2, arthritis, binge,	bphigh,	bpmed, cancer, casthma, chd, 
-                     checkup, cholscreen, copd, csmoking, depression, diabetes, highchol, 
-                     kidney, obesity, stroke, scaled_totalpopulation]
-        logger.info("New observation entered, min value: %.2f, max_value: %.2f", min(input_arr), max(input_arr))
-    
-    def generate_pred(self) -> float:
-        """
-        Queries coefficients from Parameters table and user input from Features table.
-        Generates a prediction using regression formula.
-
-        Args:
-            None
-        
-        Returns:
-            float
-        """
-
-        session = self.session
-        coeffs = session.query(Parameters).first()
-        inputs = session.query(Features).first()
-        pred = (coeffs.access2 * inputs.access2 + 
-                coeffs.arthritis * inputs.arthritis + 
-                coeffs.binge * inputs.binge + 
-                coeffs.bphigh * inputs.bphigh + 
-                coeffs.bpmed * inputs.bpmed + 
-                coeffs.cancer * inputs.cancer + 
-                coeffs.casthma * inputs.casthma + 
-                coeffs.chd * inputs.chd + 
-                coeffs.checkup * inputs.checkup + 
-                coeffs.cholscreen * inputs.cholscreen + 
-                coeffs.copd * inputs.copd + 
-                coeffs.csmoking * inputs.csmoking + 
-                coeffs.depression * inputs.depression + 
-                coeffs.diabetes * inputs.diabetes + 
-                coeffs.highchol * inputs.highchol + 
-                coeffs.kidney * inputs.kidney + 
-                coeffs.obesity * inputs.obesity + 
-                coeffs.stroke * inputs.stroke + 
-                coeffs.scaled_totalpopulation * inputs.scaled_totalpopulation + 
-                coeffs.midwest * inputs.midwest + 
-                coeffs.northeast * inputs.northeast + 
-                coeffs.south * inputs.south + 
-                coeffs.southwest * inputs.southwest + 
-                coeffs.intercept) 
-
-        # Capture probability from log-odds
-        # prob = odds / (1 + odds)
-        prob = math.exp(pred) / (1 + math.exp(pred))
- 
-        print(f"prediction: {prob}")
-        return 0.0
+        logger.info("New prediction generated: %.2f", prob)
+        return prob
     
     def remove_inputs(self) -> None:
         """

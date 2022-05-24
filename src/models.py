@@ -4,6 +4,7 @@ import logging
 import sqlalchemy as sql
 import sqlalchemy.exc
 import sqlalchemy.orm
+from sqlalchemy.sql import func
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, MetaData, Float
 
@@ -42,6 +43,8 @@ class Features(Base):
     northeast = sql.Column(sql.Integer, unique=False, nullable=False)
     south = sql.Column(sql.Integer, unique=False, nullable=False)
     southwest = sql.Column(sql.Integer, unique=False, nullable=False)
+    prediction = sql.Column(sql.Float, unique=False, nullable=True)
+    record_time = sql.Column(sql.DateTime, unique=False, nullable=True, default=func.now())
 
     def __repr__(self):
         return f"<Features: access2: {self.access2}, arthritis: {self.arthritis}, binge: {self.binge}, bphigh: {self.bphigh}, bpmed: {self.bpmed}, cancer: {self.cancer}, \
