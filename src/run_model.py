@@ -34,13 +34,18 @@ def validate_clean(places_df: pd.DataFrame,
     """
 
     try:
-        logger.info("Number of rows in training data is %i", len(places_df))
+        row_cnt = len(places_df)
+        logger.info("Number of rows in training data is %i", row_cnt)
+        if row_cnt == 0:
+            logger.error("An empty dataframe has been passed for training.")
+            raise ValueError
     except NameError:
         logger.error("Please confirm a clean dataframe was retrieved.")
     if not set(columns).issubset(places_df.columns):
              logger.error("Some necessary columns are missing."
                           "Please confirm that the following columns are present: %i",
                           columns)
+             sys.exit(1)
 
 def create_params(engine: sql.engine.base.Engine,
                   params : typing.Dict):
@@ -105,7 +110,7 @@ def fit_model(places_df: pd.DataFrame,
               **kwargs) -> typing.Dict:
 
     logger.info("%s model training", method)
-    model = LinearRegression().fit(places_df[features], 
+    model = LinearRegression(**kwargs).fit(places_df[features], 
                                    places_df[response])
     coeffs : np.ndarray = model.coef_
     intercept : np.float64 = model.intercept_
@@ -115,7 +120,7 @@ def fit_model(places_df: pd.DataFrame,
     # parameter table requires all lowercase
     params = dict(zip([x.lower() for x in feature_nms], coeffs))
     params['intercept'] = intercept
-    logger.info("Model fitting parameters captured")
+    logger.info("Model fitting parameters captured.")
 
     return params
 

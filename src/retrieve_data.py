@@ -109,10 +109,10 @@ def upload_to_s3_pandas(input_df: pd.DataFrame,
         input_df (pandas dataframe) : Dataframe to be uploaded as csv to s3 bucket.
         s3path (str) : Url of s3 bucket
         sep (str) : Delimeter character.
-                    Defaults to ';' to avoid inferring incorrect character.
+                    Defaults to ','.
 
     Returns:
-        pandas dataframe: PLACES data from API
+        None; uploads file to s3
 
     """
 

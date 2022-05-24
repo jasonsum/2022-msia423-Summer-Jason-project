@@ -345,9 +345,10 @@ def prep_data(places_df : pd.DataFrame,
         pandas dataframe: PLACES dataframe with one row per county
 
     """
-    places_pivot = pivot_measures(places_df)
+    places_pivot = pivot_measures(places_df) # Make one county per row
     places_pivot = drop_null_responses(places_pivot, response)
     places_pivot = drop_invalid_measures(places_pivot, invalid_measures)
+    # Make proportions floats and log-transform field(s)
     places_pivot = reformat_measures(places_pivot, make_floats,
                                      make_logit)
 
