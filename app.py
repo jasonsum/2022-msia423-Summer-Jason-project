@@ -113,11 +113,11 @@ def add_entry():
                'northeast':0,
                'south':0, 
                'southwest':0}
-    for k, v in regions.items():
+    for k in regions.keys():
         if k == request.form['region']:
             regions[k] = 1
 
-    scaled_TotalPopulation = (float(request.form['population']) - min_value)/(max_value-min_value)
+    scaled_totalpopulation = (float(request.form['population']) - min_value)/(max_value-min_value)
 
     try:
         pred_manager.add_input(access2=float(request.form['access2'])/100,
@@ -134,16 +134,18 @@ def add_entry():
                                csmoking=float(request.form['csmoking'])/100,
                                depression=float(request.form['depression'])/100,
                                diabetes=float(request.form['diabetes'])/100,
-                               highcol=float(request.form['highcol'])/100,
+                               highchol=float(request.form['highcol'])/100,
                                kidney=float(request.form['kidney'])/100,
                                obesity=float(request.form['obesity'])/100,
                                stroke=float(request.form['stroke'])/100,
-                               scaled_TotalPopulation=scaled_TotalPopulation,
+                               scaled_totalpopulation=scaled_totalpopulation,
                                midwest=int(regions['midwest']),
                                northeast=int(regions['northeast']),
                                south=int(regions['south']),
                                southwest=int(regions['southwest']))
         logger.info("New recorded added for prediction.")
+        pred_manager.generate_pred()
+        pred_manager.remove_inputs()
         return redirect(url_for('index'))
     except sqlite3.OperationalError as e:
         logger.error(

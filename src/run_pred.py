@@ -6,6 +6,7 @@ import logging
 import logging.config
 import sqlite3
 import typing
+import math
 
 import flask
 import sqlalchemy
@@ -71,7 +72,7 @@ class PredManager:
                   kidney: float,
                   obesity: float,
                   stroke: float,
-                  scaled_TotalPopulation: float,
+                  scaled_totalpopulation: float,
                   midwest: int,
                   northeast: int,
                   south: int,
@@ -106,7 +107,6 @@ class PredManager:
             south: Binary indicator of county in corresponding region. 1 indicates True.
             southwest: Binary indicator of county in corresponding region. 1 indicates True.
 
-
         Returns:
             None
         """
@@ -130,7 +130,7 @@ class PredManager:
                          kidney=kidney,
                          obesity=obesity,
                          stroke=stroke,
-                         scaled_TotalPopulation=scaled_TotalPopulation,
+                         scaled_totalpopulation=scaled_totalpopulation,
                          midwest=midwest,
                          northeast=northeast,
                          south=south,
@@ -140,5 +140,67 @@ class PredManager:
         session.commit()
         input_arr = [access2, arthritis, binge,	bphigh,	bpmed, cancer, casthma, chd, 
                      checkup, cholscreen, copd, csmoking, depression, diabetes, highchol, 
-                     kidney, obesity, stroke, scaled_TotalPopulation]
+                     kidney, obesity, stroke, scaled_totalpopulation]
         logger.info("New observation entered, min value: %.2f, max_value: %.2f", min(input_arr), max(input_arr))
+    
+    def generate_pred(self) -> float:
+        """
+        Queries coefficients from Parameters table and user input from Features table.
+        Generates a prediction using regression formula.
+
+        Args:
+            None
+        
+        Returns:
+            float
+        """
+
+        session = self.session
+        coeffs = session.query(Parameters).first()
+        inputs = session.query(Features).first()
+        pred = (coeffs.access2 * inputs.access2 + 
+                coeffs.arthritis * inputs.arthritis + 
+                coeffs.binge * inputs.binge + 
+                coeffs.bphigh * inputs.bphigh + 
+                coeffs.bpmed * inputs.bpmed + 
+                coeffs.cancer * inputs.cancer + 
+                coeffs.casthma * inputs.casthma + 
+                coeffs.chd * inputs.chd + 
+                coeffs.checkup * inputs.checkup + 
+                coeffs.cholscreen * inputs.cholscreen + 
+                coeffs.copd * inputs.copd + 
+                coeffs.csmoking * inputs.csmoking + 
+                coeffs.depression * inputs.depression + 
+                coeffs.diabetes * inputs.diabetes + 
+                coeffs.highchol * inputs.highchol + 
+                coeffs.kidney * inputs.kidney + 
+                coeffs.obesity * inputs.obesity + 
+                coeffs.stroke * inputs.stroke + 
+                coeffs.scaled_totalpopulation * inputs.scaled_totalpopulation + 
+                coeffs.midwest * inputs.midwest + 
+                coeffs.northeast * inputs.northeast + 
+                coeffs.south * inputs.south + 
+                coeffs.southwest * inputs.southwest + 
+                coeffs.intercept) 
+
+        # Capture probability from log-odds
+        # prob = odds / (1 + odds)
+        prob = math.exp(pred) / (1 + math.exp(pred))
+ 
+        print(f"prediction: {prob}")
+        return 0.0
+    
+    def remove_inputs(self) -> None:
+        """
+        Deletes all rows from Features table
+
+        Args:
+            None
+        
+        Returns:
+            None
+        """
+
+        session = self.session
+        session.query(Features).delete()
+        session.commit()

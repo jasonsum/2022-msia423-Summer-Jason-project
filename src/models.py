@@ -37,18 +37,16 @@ class Features(Base):
     kidney = sql.Column(sql.Float, unique=False, nullable=False)
     obesity = sql.Column(sql.Float, unique=False, nullable=False)
     stroke = sql.Column(sql.Float, unique=False, nullable=False)
-    scaled_TotalPopulation = sql.Column(sql.Float, unique=False, nullable=False)
+    scaled_totalpopulation = sql.Column(sql.Float, unique=False, nullable=False)
     midwest = sql.Column(sql.Integer, unique=False, nullable=False)
     northeast = sql.Column(sql.Integer, unique=False, nullable=False)
     south = sql.Column(sql.Integer, unique=False, nullable=False)
     southwest = sql.Column(sql.Integer, unique=False, nullable=False)
-    logit_ghlth = sql.Column(sql.Float, unique=False, nullable=True)
-    ghlth = sql.Column(sql.Float, unique=False, nullable=True)
 
     def __repr__(self):
         return f"<Features: access2: {self.access2}, arthritis: {self.arthritis}, binge: {self.binge}, bphigh: {self.bphigh}, bpmed: {self.bpmed}, cancer: {self.cancer}, \
                 casthma: {self.casthma}, chd: {self.chd}, checkup: {self.checkup}, cholscreen: {self.cholscreen}, copd: {self.copd}, csmoking: {self.csmoking}, depression: {self.depression}, \
-                diabetes: {self.diabetes}, highchol: {self.highchol}, kidney: {self.kidney}, obesity: {self.obesity}, stroke: {self.stroke}, scaled_TotalPopulation: {self.scaled_TotalPopulation}, \
+                diabetes: {self.diabetes}, highchol: {self.highchol}, kidney: {self.kidney}, obesity: {self.obesity}, stroke: {self.stroke}, scaled_TotalPopulation: {self.scaled_totalpopulation}, \
                 midwest: {self.midwest}, northeast: {self.northeast}, south: {self.south}, southwest: {self.southwest}>"
 
 class Parameters(Base):
@@ -85,7 +83,7 @@ class Parameters(Base):
     def __repr__(self):
         return f"<Parameters: access2: {self.access2}, arthritis: {self.arthritis}, binge: {self.binge}, bphigh: {self.bphigh}, bpmed: {self.bpmed}, cancer: {self.cancer}, \
                 casthma: {self.casthma}, chd: {self.chd}, checkup: {self.checkup}, cholscreen: {self.cholscreen}, copd: {self.copd}, csmoking: {self.csmoking}, depression: {self.depression}, \
-                diabetes: {self.diabetes}, highchol: {self.highchol}, kidney: {self.kidney}, obesity: {self.obesity}, stroke: {self.stroke}, scaled_TotalPopulation: {self.scaled_TotalPopulation}, \
+                diabetes: {self.diabetes}, highchol: {self.highchol}, kidney: {self.kidney}, obesity: {self.obesity}, stroke: {self.stroke}, scaled_TotalPopulation: {self.scaled_totalpopulation}, \
                 midwest: {self.midwest}, northeast: {self.northeast}, south: {self.south}, southwest: {self.southwest}, \
                 intercept: {self.intercept}>"
 
@@ -137,6 +135,8 @@ def create_db(engine_string : str) -> None:
         logger.debug("Database URI: %s", )
         raise e
 
+    # drop tables if exists
+    Base.metadata.drop_all(engine)
     # create tables
     Base.metadata.create_all(engine)
     logger.info("Database created.")
