@@ -4,10 +4,10 @@ import sqlite3
 import traceback
 
 import sqlalchemy.exc
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request
 
 # For setting up the Flask-SQLAlchemy database session
-from src.models import Measures, Features, scalerRanges
+from src.models import scalerRanges
 from src.run_pred import PredManager 
 
 # Initialize the Flask application
@@ -70,12 +70,7 @@ def index():
     """
 
     try:
-        hlth_outcomes = pred_manager.session.query(Measures).filter_by(category="health outcomes").limit(
-            app.config["MAX_ROWS_SHOW"]).all()
-        hlth_behaviors = pred_manager.session.query(Measures).filter_by(category="health risk behaviors").limit(
-            app.config["MAX_ROWS_SHOW"]).all()
-        hlth_prevention = pred_manager.session.query(Measures).filter_by(category="prevention").limit(
-            app.config["MAX_ROWS_SHOW"]).all()
+        hlth_outcomes, hlth_behaviors, hlth_prevention = pred_manager.get_metrics(app.config["MAX_ROWS_SHOW"])
         logger.debug("Index page accessed")
         return render_template('index.html', 
                                hlth_outcomes=hlth_outcomes,
@@ -120,41 +115,35 @@ def add_entry():
 
     scaled_totalpopulation = (float(request.form['population']) - min_value)/(max_value-min_value)
 
-    hlth_outcomes = pred_manager.session.query(Measures).filter_by(category="health outcomes").limit(
-            app.config["MAX_ROWS_SHOW"]).all()
-    hlth_behaviors = pred_manager.session.query(Measures).filter_by(category="health risk behaviors").limit(
-        app.config["MAX_ROWS_SHOW"]).all()
-    hlth_prevention = pred_manager.session.query(Measures).filter_by(category="prevention").limit(
-        app.config["MAX_ROWS_SHOW"]).all()
+    # Retrieve measurements again for display
+    hlth_outcomes, hlth_behaviors, hlth_prevention = pred_manager.get_metrics(app.config["MAX_ROWS_SHOW"])
     
     try:
-        prob = pred_manager.add_input(access2=float(request.form['access2'])/100,
-                               arthritis=float(request.form['arthritis'])/100,
-                               binge=float(request.form['binge'])/100,
-                               bphigh=float(request.form['bphigh'])/100,
-                               bpmed=float(request.form['bpmed'])/100,
-                               cancer=float(request.form['cancer'])/100,
-                               casthma=float(request.form['casthma'])/100,
-                               chd=float(request.form['chd'])/100,
-                               checkup=float(request.form['checkup'])/100,
-                               cholscreen=float(request.form['cholscreen'])/100,
-                               copd=float(request.form['copd'])/100,
-                               csmoking=float(request.form['csmoking'])/100,
-                               depression=float(request.form['depression'])/100,
-                               diabetes=float(request.form['diabetes'])/100,
-                               highchol=float(request.form['highcol'])/100,
-                               kidney=float(request.form['kidney'])/100,
-                               obesity=float(request.form['obesity'])/100,
-                               stroke=float(request.form['stroke'])/100,
-                               scaled_totalpopulation=scaled_totalpopulation,
-                               midwest=int(regions['midwest']),
-                               northeast=int(regions['northeast']),
-                               south=int(regions['south']),
-                               southwest=int(regions['southwest']))
-        logger.info("New recorded added for prediction.")
-        #pred = pred_manager.generate_pred()
-        #pred_manager.remove_inputs()
-        #return redirect(url_for('index'))
+        prob = pred_manager.generate_pred(access2=float(request.form['access2'])/100,
+                                            arthritis=float(request.form['arthritis'])/100,
+                                            binge=float(request.form['binge'])/100,
+                                            bphigh=float(request.form['bphigh'])/100,
+                                            bpmed=float(request.form['bpmed'])/100,
+                                            cancer=float(request.form['cancer'])/100,
+                                            casthma=float(request.form['casthma'])/100,
+                                            chd=float(request.form['chd'])/100,
+                                            checkup=float(request.form['checkup'])/100,
+                                            cholscreen=float(request.form['cholscreen'])/100,
+                                            copd=float(request.form['copd'])/100,
+                                            csmoking=float(request.form['csmoking'])/100,
+                                            depression=float(request.form['depression'])/100,
+                                            diabetes=float(request.form['diabetes'])/100,
+                                            highchol=float(request.form['highcol'])/100,
+                                            kidney=float(request.form['kidney'])/100,
+                                            obesity=float(request.form['obesity'])/100,
+                                            stroke=float(request.form['stroke'])/100,
+                                            scaled_totalpopulation=scaled_totalpopulation,
+                                            midwest=int(regions['midwest']),
+                                            northeast=int(regions['northeast']),
+                                            south=int(regions['south']),
+                                            southwest=int(regions['southwest']))
+        logger.info("New prediction recorded.")
+        pred_manager.remove_inputs()
         return render_template('index.html', 
                                hlth_outcomes=hlth_outcomes,
                                hlth_behaviors=hlth_behaviors,
@@ -162,13 +151,13 @@ def add_entry():
                                prediction=str(prob))
     except sqlite3.OperationalError as e:
         logger.error(
-            "Error page returned. Not able to add new record to database"
+            "Error page returned. Not able to access database"
             "database: %s. Error: %s ",
             app.config['SQLALCHEMY_DATABASE_URI'], e)
         return render_template('error.html')
     except sqlalchemy.exc.OperationalError as e:
         logger.error(
-            "Error page returned. Not able to add song to MySQL database: %s. "
+            "Error page returned. Not able to access database: %s. "
             "Error: %s ",
             app.config['SQLALCHEMY_DATABASE_URI'], e)
         return render_template('error.html')
