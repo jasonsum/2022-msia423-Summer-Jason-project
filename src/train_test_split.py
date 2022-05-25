@@ -42,10 +42,12 @@ def split_data(places_df: pd.DataFrame,
             train, test = sklearn.model_selection.train_test_split(places_df,
                                                                    test_size=test_size,
                                                                    random_state=random_state)
+            logger.info("Training data has %i rows", len(train))
+            logger.info("Test data has %i rows", len(test))
             test["training"] = 0
             combined_df = pd.concat([train, test], axis=0)  # type: ignore
         except TypeError:
-            logger.error("Value of test_size must be a float.")
+            logger.error("test_size must be a float and random_state an integer.")
         except ValueError:
             logger.error("Value of test_size must be between 0 and 1.")
 

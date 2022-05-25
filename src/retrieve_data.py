@@ -69,11 +69,12 @@ def import_places_api(url : str,
             limit 3000000
             """
             # API suggestions sourced from https://dev.socrata.com/foundry/chronicdata.cdc.gov/cwsq-ngmh
+            logger.info("Retrieving data...could take a few minutes...")
             data : list[list[str]] = client.get(dataset_identifier,
                                                 query = socrata_query,
                                                 exclude_system_fields = True)
             data_df : pd.DataFrame = pd.DataFrame.from_records(data)
-            logger.info("API connection succesful. %i rows of SHAPE data imported", data_df.shape[0])
+            logger.info("API connection successful. %i rows of SHAPE data imported", data_df.shape[0])
 
         except ConnectionError:
             if i + 1 < attempts:
