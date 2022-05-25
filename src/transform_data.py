@@ -21,31 +21,35 @@ from src.models import scalerRanges
 
 logger = logging.getLogger(__name__)
 
-def import_from_s3(s3path: str,
-                   columns : typing.Optional[typing.List[str]] = None,
-                   sep: str = ',') -> pd.DataFrame:
+def import_file(s3path: str,
+                columns : typing.Optional[typing.List[str]] = None,
+                sep: str = ',',
+                **kwargs) -> pd.DataFrame:
     """
-    Imports CDC PLACES data from s3 bucket.
+    Imports CDC PLACES data from provided location.
 
-    Function imports csv data from s3 and generates
+    Function imports csv data and generates
     pandas dataframe from entire csv.
     Pandas dataframe has columns passed through columns parameter.
 
     Args:
-        s3path (str) : Url of s3 bucket
+        s3path (str) : Url of s3 bucket or location
         columns (list of str) : Columns of dataframe to include.
         sep (str) : Delimeter character.
                     Defaults to ',' for csv.
+        kwargs (dict) : Additional parameters of pandas.read_csv.
 
     Returns:
         pandas dataframe: PLACES data
 
     """
 
+    places = pd.DataFrame()
     try:
         places : pd.DataFrame = pd.read_csv(s3path,
                                             usecols = columns, #type:ignore
-                                            sep=sep)
+                                            sep=sep,
+                                            **kwargs)
     except botocore.exceptions.NoCredentialsError:
         logger.error('Please provide AWS credentials via AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY env variables.')
         sys.exit(1)
@@ -158,7 +162,8 @@ def drop_invalid_measures(places_pivot : pd.DataFrame,
     """
     places_pivot.drop(invalid_measures,
                       axis=1,
-                      inplace=True)
+                      inplace=True,
+                      errors="ignore")
 
     places_pivot.reset_index(drop=True, inplace=True)
     

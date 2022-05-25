@@ -16,10 +16,11 @@ from sodapy import Socrata
 
 logger = logging.getLogger(__name__)
 
-def import_places_api(app_token,
-                      socrata_username,
-                      socrata_password,
-                      socrata_dataset_identifier: str = "cwsq-ngmh",
+def import_places_api(url : str,
+                      app_token : str,
+                      socrata_username : str,
+                      socrata_password : str,
+                      dataset_identifier: str = "cwsq-ngmh",
                       attempts: int = 4) -> pd.DataFrame:
     """
     Retrieves CDC PLACES data via Socrata API.
@@ -44,7 +45,7 @@ def import_places_api(app_token,
     wait = 5 # seconds to wait between api call (increases exponentially)
     for i in range(attempts):
         try:
-            client = Socrata("chronicdata.cdc.gov",
+            client = Socrata(url,
                              app_token,
                              socrata_username,
                              socrata_password)
@@ -68,7 +69,7 @@ def import_places_api(app_token,
             limit 3000000
             """
             # API suggestions sourced from https://dev.socrata.com/foundry/chronicdata.cdc.gov/cwsq-ngmh
-            data : list[list[str]] = client.get(socrata_dataset_identifier,
+            data : list[list[str]] = client.get(dataset_identifier,
                                                 query = socrata_query,
                                                 exclude_system_fields = True)
             data_df : pd.DataFrame = pd.DataFrame.from_records(data)
@@ -95,13 +96,15 @@ def import_places_api(app_token,
         except Exception as e:
             logger.error("Exiting due to error: %s", e)
             sys.exit(1)
+        else:
+            break
     
     return data_df
 
 
-def upload_to_s3_pandas(input_df: pd.DataFrame,
-                        s3path: str,
-                        sep: str = ',') -> None:
+def upload_file(input_df: pd.DataFrame,
+                s3path: str,
+                sep: str = ',') -> None:
     """
     Uploads pandas dataframe to s3path.
 

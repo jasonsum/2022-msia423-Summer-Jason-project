@@ -7,127 +7,134 @@ import os
 import yaml
 import sys
 
-from config.config import SOCRATA_DATASET_IDENTIFIER
-from config.config import SQLALCHEMY_DATABASE_URI
-from config.config import SOCRATA_TOKEN, SOCRATA_USERNAME, SOCRATA_PASSWORD
-from src.retrieve_data import import_places_api, upload_to_s3_pandas
+# Configurations
+import config.config as config
+
+# Modules
 from src.models import create_db
 from src.add_definitions import add_references
-from src.transform_data import import_from_s3, prep_data, scale_values, one_hot_encode
+from src.retrieve_data import import_places_api, upload_file
+from src.transform_data import import_file, prep_data, scale_values, one_hot_encode
 from src.run_model import validate_clean, fit_model, add_params
+from src.train_test_split import split_data
+
+# References
 from data.reference.state_region_mapping import states_region_mapping
 
+"""
+Expected environment variables:
+API:
+SOCRATA_TOKEN, SOCRATA_USERNAME, SOCRATA_PASSWORD
+Database:
+SQLALCHEMY_DATABASE_URI
+S3:
+AWS_ACCESS_KEY_ID
+AWS_SECRET_ACCESS_KEY
+"""
+
 logging.config.fileConfig('config/logging/local.conf')
-logger = logging.getLogger('places-health-pipeline')
+logger = logging.getLogger('model_pipeline')
 
 if __name__ == '__main__':
 
-    with open('config/model-config.yaml', 'r') as f:
-        model_cfg = yaml.load(f, Loader = yaml.FullLoader)
-
-    # Add parsers for both creating a database and adding songs to it
+    # Create parsers to determine transaction
     parser = argparse.ArgumentParser(
-        description="Create database, populate database, and/or train model")
-    subparsers = parser.add_subparsers(dest='subparser_name')
+        description="Build database, acquire data, transform data\
+                     train model, score model, and/or evaluate model.")
 
-    # Sub-parser for creating a database
-    sp_create = subparsers.add_parser("create_db",
-                                      description="Create database")
-    sp_create.add_argument("--engine_string", default=SQLALCHEMY_DATABASE_URI,
+    parser.add_argument('step', help='Which step to run', choices=['create_db', 'ingest', 
+                                                                   'transform', 'train', 'score'])
+    parser.add_argument("--engine_string", default=config.SQLALCHEMY_DATABASE_URI,
                            help="SQLAlchemy connection URI for database")
-    sp_create.add_argument("--definitions", action='store_true', default=False,
-                           help="Add definitions to Measures table")
-    
-    # Sub-parser for adding measure definitions
-    sp_create = subparsers.add_parser("define",
-                                      description="Add measure definitions")
-    sp_create.add_argument("--engine_string", default=SQLALCHEMY_DATABASE_URI,
-                           help="SQLAlchemy connection URI for database")
-
-    # Sub-parser for ingesting data from API and placing in S3
-    sp_ingest = subparsers.add_parser("ingest",
-                                      description="Retrieve data from API and add to S3")
-    sp_ingest.add_argument('--s3path', default='s3://2022-msia423-summer-jason/data/raw/places_raw_data.csv',
-                        help="If used, will load data via pandas")
-    
-    # Sub-parser for ingesting raw data from S3 and placing clean data in S3
-    sp_clean = subparsers.add_parser("clean",
-                                      description="Create clean data from raw data")
-    sp_clean.add_argument('--s3path', default='s3://2022-msia423-summer-jason/data/raw/places_raw_data.csv',
-                        help="If used, will load data via pandas")
-    sp_clean.add_argument('--s3dest', default='s3://2022-msia423-summer-jason/data/clean/places_data_clean.csv',
-                        help="If used, will load data via pandas")
-    sp_clean.add_argument("--engine_string", default=SQLALCHEMY_DATABASE_URI,
-                           help="SQLAlchemy connection URI for database")
-    
-
-    # Sub-parser for model training pipeline
-    sp_train = subparsers.add_parser("train_model",
-                                      description="Import from S3, create trained model, populate RDS parameters table")
-    sp_train.add_argument('--s3path', default='s3://2022-msia423-summer-jason/data/raw/places_data_clean.csv',
-                        help="If used, will load data via pandas")
-    sp_train.add_argument("--engine_string", default=SQLALCHEMY_DATABASE_URI,
-                           help="SQLAlchemy connection URI for database")
-
+    parser.add_argument('--config', default='config/model-config.yaml', help='Path to configuration file')
+    parser.add_argument('--input', '-i', default=None, help='Path to retrieve input file')
+    parser.add_argument('--output', '-o', default=None, help='Path to save transaction output file')
+    parser.add_argument('--model', '-m', default=None, help='Path to trained model object')
     args = parser.parse_args()
-    sp_used = args.subparser_name
-    if sp_used == 'create_db':
-        if args.engine_string is None:
-            logger.error("SQLALCHEMY_DATABASE_URI environment variable not set; exiting")
-            sys.exit(1)
-        create_db(args.engine_string)
-        if args.definitions:
-            add_references(args.engine_string)
-    
-    elif sp_used == 'define':
-        if args.engine_string is None:
-            logger.error("SQLALCHEMY_DATABASE_URI environment variable not set; exiting")
-            sys.exit(1)
-        add_references(args.engine_string)
 
-    elif sp_used == 'ingest':
-        raw_data = import_places_api(SOCRATA_TOKEN, 
-                                     SOCRATA_USERNAME, 
-                                     SOCRATA_PASSWORD,
-                                     socrata_dataset_identifier=SOCRATA_DATASET_IDENTIFIER)
-        upload_to_s3_pandas(raw_data,
-                            args.s3path)
+    # Load configuration file
+    with open('config/model-config.yaml', 'r') as f:
+        mdl_config = yaml.load(f, Loader = yaml.FullLoader)
     
-    elif sp_used == 'clean':
-        transform_data = model_cfg['transform_data']
-        places_df = import_from_s3(args.s3path,
-                                   **transform_data['import_from_s3'])
-        places_pivot = prep_data(places_df,
-                                 **transform_data['prep_data'])
+    # Create database
+    if args.step == 'create_db':
+        if config.SQLALCHEMY_DATABASE_URI is None:
+            if args.engine_string:
+                engine_string = args.engine_string
+            else:
+                logger.error("Specify SQLALCHEMY_DATABASE_URI environment variable.")
+                logger.error("Otherwise, use engine_string argument; exiting.")
+                sys.exit(1)
+        else:
+            engine_string = config.SQLALCHEMY_DATABASE_URI
+        
+        create_db(engine_string) # Create tables
+        add_references(engine_string) # Add metric definitions
+    
+    # Get raw data from API
+    elif args.step == "ingest":
+        raw_data = import_places_api(**mdl_config['data']['import_places_api'],
+                                     app_token=config.SOCRATA_TOKEN,   # type: ignore
+                                     socrata_username=config.SOCRATA_USERNAME,   # type: ignore
+                                     socrata_password=config.SOCRATA_PASSWORD)  # type: ignore
+        upload_file(raw_data, args.output)
+    
+    # Clean and transform data into feature set
+    elif args.step == "transform":
+        transform_data = mdl_config['transform_data']
+        places_df = import_file(args.input, **transform_data['import_file'])
+        places_pivot = prep_data(places_df, **transform_data['prep_data'])
         if transform_data['one_hot_encode']['states_region']:
             places_pivot = one_hot_encode(places_pivot,
                                           states_to_regions = states_region_mapping)
         if transform_data['scale_values']['columns']:
-            if args.engine_string is None:
-                logger.error("SQLALCHEMY_DATABASE_URI environment variable not set; exiting")
-                sys.exit(1)
-            places_pivot = scale_values(args.engine_string,
+            # Capture correct RDS
+            if config.SQLALCHEMY_DATABASE_URI is None:
+                if args.engine_string:
+                    engine_string = args.engine_string
+                else:
+                    logger.error("Specify SQLALCHEMY_DATABASE_URI environment variable.")
+                    logger.error("Otherwise, use engine_string argument; exiting.")
+                    sys.exit(1)
+            else:
+                engine_string = config.SQLALCHEMY_DATABASE_URI
+            places_pivot = scale_values(engine_string,
                                         places_pivot,
                                         **transform_data['scale_values'])
-        upload_to_s3_pandas(places_pivot,
-                            args.s3dest)
-
+        upload_file(places_pivot, args.output)
     
-    elif sp_used == 'train_model':
-        train_model = model_cfg['train_model']
-        # Model parameters will be written to parameters table post-training
-        if args.engine_string is None:
-            logger.error("SQLALCHEMY_DATABASE_URI environment variable not set; exiting")
-            sys.exit(1)
-        places_df = import_from_s3(args.s3path,
-                                   train_model['features'] + [train_model['response']])
+    # Train model
+    elif args.step == "train":
+        # Capture correct RDS
+        if config.SQLALCHEMY_DATABASE_URI is None:
+            if args.engine_string:
+                engine_string = args.engine_string
+            else:
+                logger.error("Specify SQLALCHEMY_DATABASE_URI environment variable.")
+                logger.error("Otherwise, use engine_string argument; exiting.")
+                sys.exit(1)
+        else:
+            engine_string = config.SQLALCHEMY_DATABASE_URI
+        
+        # Import data
+        train_model = mdl_config['train_model']
+        places_df = import_file(args.input,
+                                train_model['features'] + [train_model['response']])
         validate_clean(places_df, train_model['features'] + [train_model['response']])
-        params = fit_model(places_df,
-                          train_model['method'],
-                          train_model['features'],
-                          train_model['response'],
-                          **train_model['params'])
-        add_params(args.engine_string, params)
 
+        # Split into train-test
+        combined_df = split_data(places_df, **mdl_config['train_test_split'])
+        upload_file(combined_df, args.output) # Save train-test dataframe
+
+        # Train model
+        training_set = combined_df.loc[combined_df.training == 1].copy()
+        params = fit_model(training_set,
+                           train_model['method'],
+                           train_model['features'],
+                           train_model['response'],
+                           **train_model['params'])
+        add_params(engine_string, params)
+    
     else:
         parser.print_help()
+

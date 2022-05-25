@@ -1,3 +1,8 @@
+data:
+  import_places_api: 
+    url: chronicdata.cdc.gov
+    dataset_identifier: cwsq-ngmh
+    attempts: 4
 model:
   name: linear-regression
   author: Jason Summer
@@ -8,7 +13,7 @@ model:
     - health
     - population health
 transform_data:
-  import_from_s3:
+  import_file:
     columns: [StateDesc, CountyName, CountyFIPS, LocationID, TotalPopulation, Geolocation, MeasureId, Data_Value, Category, Short_Question_Text, Measure]
   prep_data:
     response: GHLTH
@@ -19,10 +24,13 @@ transform_data:
     columns: TotalPopulation
   one_hot_encode:
     states_region: True 
+train_test_split:
+  test_size: 0.3
+  random_state: 42
 train_model:
-  method: LinearRegression
   features: [ACCESS2, ARTHRITIS, BINGE, BPHIGH, BPMED, CANCER, CASTHMA, CHD, CHECKUP, CHOLSCREEN, COPD, CSMOKING, DEPRESSION, DIABETES, HIGHCHOL, KIDNEY, OBESITY, STROKE, scaled_TotalPopulation, Midwest, Northeast, South, Southwest]
   response: GHLTH
+  method: LinearRegression
   params:
      fit_intercept: True
 

@@ -10,7 +10,7 @@ from sqlalchemy import Column, MetaData, Float
 
 # set up looging config
 logging.basicConfig(format="%(levelname)s:%(message)s", level=logging.DEBUG)
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 Base = declarative_base()
 

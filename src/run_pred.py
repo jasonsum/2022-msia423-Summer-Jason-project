@@ -52,8 +52,26 @@ class PredManager:
         """
         self.session.close()
           
+    def get_metrics(self,
+                    row_limit : int):
+        
+        """Queries database for homepage measurements of app.
 
-    def add_input(self, 
+        Args:
+            row_limit (str): Number of rows to return across all queries
+        """
+
+        session = self.session
+        hlth_outcomes = session.query(Measures).filter_by(category="health outcomes").limit(
+            row_limit).all()
+        hlth_behaviors = session.query(Measures).filter_by(category="health risk behaviors").limit(
+            row_limit).all()
+        hlth_prevention = session.query(Measures).filter_by(category="prevention").limit(
+            row_limit).all()
+        
+        return  hlth_outcomes, hlth_behaviors, hlth_prevention
+
+    def generate_pred(self, 
                   access2: float,
                   arthritis: float,
                   binge: float,
@@ -170,8 +188,8 @@ class PredManager:
                          prediction=prob)
         
         session.add(input)
-        session.commit()
         logger.info("New prediction generated: %.2f", prob)
+        session.commit()
         return prob
     
     def remove_inputs(self) -> None:
