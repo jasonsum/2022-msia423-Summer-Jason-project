@@ -1,7 +1,7 @@
 import os
 DEBUG = True
 LOGGING_CONFIG = "config/logging/local.conf"
-PORT = 5000# Change to 5000 for docker
+PORT = 5000
 APP_NAME = "places"
 SQLALCHEMY_TRACK_MODIFICATIONS = True
 HOST = "0.0.0.0"
