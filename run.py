@@ -14,9 +14,10 @@ import config.config as config
 from src.models import create_db
 from src.add_definitions import add_references
 from src.retrieve_data import import_places_api, upload_file
-from src.transform_data import import_file, prep_data, scale_values, one_hot_encode
-from src.run_model import validate_clean, fit_model, add_params
+from src.transform_data import import_file, validate_df, prep_data, scale_values, one_hot_encode
+from src.run_model import fit_model, add_params, dump_model
 from src.train_test_split import split_data
+from src.score import import_model, pred_responses
 
 # References
 from data.reference.state_region_mapping import states_region_mapping
@@ -83,6 +84,7 @@ if __name__ == '__main__':
     elif args.step == "transform":
         transform_data = mdl_config['transform_data']
         places_df = import_file(args.input, **transform_data['import_file'])
+        validate_df(places_df, **transform_data['validate_df'])
         places_pivot = prep_data(places_df, **transform_data['prep_data'])
         if transform_data['one_hot_encode']['states_region']:
             places_pivot = one_hot_encode(places_pivot,
@@ -120,7 +122,7 @@ if __name__ == '__main__':
         train_model = mdl_config['train_model']
         places_df = import_file(args.input,
                                 train_model['features'] + [train_model['response']])
-        validate_clean(places_df, train_model['features'] + [train_model['response']])
+        validate_df(places_df, **train_model['validate_df'])
 
         # Split into train-test
         combined_df = split_data(places_df, **mdl_config['train_test_split'])
@@ -128,12 +130,25 @@ if __name__ == '__main__':
 
         # Train model
         training_set = combined_df.loc[combined_df.training == 1].copy()
-        params = fit_model(training_set,
+        params, model = fit_model(training_set,
                            train_model['method'],
                            train_model['features'],
                            train_model['response'],
                            **train_model['params'])
         add_params(engine_string, params)
+        dump_model(model,args.model)
+
+    # Score model
+    elif args.step == "score":
+        # Import model and re-create test set
+        model = import_model(args.model)
+        combined_df = import_file(args.input)
+        validate_df(combined_df, **mdl_config['score']['validate_df'])
+        test_df = combined_df.loc[combined_df.training == 0].copy()
+        test_df = pred_responses(model, 
+                                 test_df,
+                                 mdl_config['train_model']['features'])
+        upload_file(test_df, args.output) # Save test predictions dataframe
     
     else:
         parser.print_help()

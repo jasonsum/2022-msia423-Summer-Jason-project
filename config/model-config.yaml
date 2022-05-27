@@ -15,6 +15,16 @@ model:
 transform_data:
   import_file:
     columns: [StateDesc, CountyName, CountyFIPS, LocationID, TotalPopulation, Geolocation, MeasureId, Data_Value, Category, Short_Question_Text, Measure]
+  validate_df:
+    cols: 
+      StateDesc: str
+      CountyName: str
+      CountyFIPS: int
+      LocationID: int
+      TotalPopulation: int
+      Geolocation: str
+      MeasureId: str
+      Data_Value: float
   prep_data:
     response: GHLTH
     invalid_measures: [TEETHLOST, SLEEP, MAMMOUSE, DENTAL, COREW, COREM, COLON_SCREEN, CERVICAL, LPA, MHLTH, PHLTH]
@@ -30,7 +40,60 @@ train_test_split:
 train_model:
   features: [ACCESS2, ARTHRITIS, BINGE, BPHIGH, BPMED, CANCER, CASTHMA, CHD, CHECKUP, CHOLSCREEN, COPD, CSMOKING, DEPRESSION, DIABETES, HIGHCHOL, KIDNEY, OBESITY, STROKE, scaled_TotalPopulation, Midwest, Northeast, South, Southwest]
   response: GHLTH
+  validate_df:
+    cols: 
+      ACCESS2: float
+      ARTHRITIS: float
+      BINGE: float
+      BPHIGH: float
+      BPMED: float
+      CANCER: float
+      CASTHMA: float
+      CHD: float
+      CHECKUP: float
+      CHOLSCREEN: float
+      COPD: float
+      CSMOKING: float
+      DEPRESSION: float
+      DIABETES: float
+      HIGHCHOL: float
+      KIDNEY: float
+      OBESITY: float
+      STROKE: float
+      scaled_TotalPopulation: float
+      Midwest: int
+      Northeast: int
+      South: int
+      Southwest: int
   method: LinearRegression
   params:
      fit_intercept: True
+score:
+  validate_df:
+    cols:
+      ACCESS2: float
+      ARTHRITIS: float
+      BINGE: float
+      BPHIGH: float
+      BPMED: float
+      CANCER: float
+      CASTHMA: float
+      CHD: float
+      CHECKUP: float
+      CHOLSCREEN: float
+      COPD: float
+      CSMOKING: float
+      DEPRESSION: float
+      DIABETES: float
+      HIGHCHOL: float
+      KIDNEY: float
+      OBESITY: float
+      STROKE: float
+      scaled_TotalPopulation: float
+      Midwest: int
+      Northeast: int
+      South: int
+      Southwest: int
+      training: int
+
 
