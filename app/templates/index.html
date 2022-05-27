@@ -3,8 +3,11 @@
 <head>
    <meta charset="UTF-8">
    <meta name="viewport" content="width=device-width, initial-scale=1">
-   <link href="static/basic.css" rel="stylesheet">
-   <h1>CDC PLACES Community Health Estimator</h1>
+   <link href="static/basic.css" rel="stylesheet"
+   href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+   <h1>CDC Community Health Estimator</h1>
    
 </head>
 
@@ -14,38 +17,29 @@
          <a href = "{{ url_for('index') }}"></a>
     </h3>
 
-    <!-- <hr/> -->
-    <!-- <table>
-         <thead>
-            <tr>
-               <th>Category</th>
-               <th>Measure</th>
-               <th>Description</th>
-            </tr>
-         </thead>
-         <tbody>
-            {% for measure in measures %}
-               <tr>
-                   <td>{{ measure.category }}</td>
-                   <td>{{ measure.measureid }}</td>
-                   <td>{{ measure.short_question_text }}</td>
-               </tr>
-            {% endfor %}
-         </tbody>
-      </table> -->
-      <!-- <div class="slider-container">
-            <input type="range" min="0" max="100" value="50" class="slider" id="myRange">
-            <span id="demo">0</span>
-      </div> -->
       <form action="{{ url_for('add_entry') }}" method=post class=add-entry>
          <div class="m-5" >
       <dl> 
+         <div >
+            <p>Welcome to the Community Health Estimator, a self-service population health estimator. The service estimates the proportion of community residents that rate their 
+               current health status as fair or poor. The projections are based on the below estimated heatlhcare demographics, behaviors, diagnoses of US counties.
+               <br>
+               <br>
+               To estimate the proportion of your county's residents that rate their health as fair or poor, specify the below demographics of the population and click submit.
+               <br>
+               <br>
+               {{prediction}}
+            </p>
+         </div>
          <h3>Community Health Outcome Measurements</h3>
          {% for measure in hlth_outcomes %}
          <p>
          <label for="customRange1" class="form-label">{{ measure.short_question_text }}</label>
-         <input name="{{ measure.measureid }}" type="range" class="form-range" id="{{ measure.measureid }}"
-                min="0" max="100">
+         <span class="slider">
+            <input name="{{ measure.measureid }}" type="range" class="form-range" id="{{ measure.measureid }}"
+                min="0" value=10 max="100" oninput="this.nextElementSibling.value = this.value">
+                <output name={{ measure.measureid }} id="amount" for="rangeInput">10</output><span>%</span>
+         </span>
          </p>
          {% endfor %}
 
@@ -53,23 +47,32 @@
          {% for measure in hlth_behaviors %}
          <p>
          <label for="customRange1" class="form-label">{{ measure.short_question_text }}</label>
-         <input name="{{ measure.measureid }}" type="range" class="form-range" id="{{ measure.measureid }}"
-                min="0" max="100">
+         <span class="slider">
+            <input name="{{ measure.measureid }}" type="range" class="form-range" id="{{ measure.measureid }}"
+                min="0" value=10 max="100" oninput="this.nextElementSibling.value = this.value">
+                <output name={{ measure.measureid }} id="amount" for="rangeInput">10</output><span>%</span>
+         </span>
          </p>
          {% endfor %}
          <h3>Community Preventative Measurements</h3>
          {% for measure in hlth_prevention %}
          <p>
          <label for="customRange1" class="form-label">{{ measure.short_question_text }}</label>
-         <input name="{{ measure.measureid }}" type="range" class="form-range" id="{{ measure.measureid }}"
-                min="0" max="100">
+         <span class="slider">
+         <input name="{{ measure.measureid }}" id="{{ measure.measureid }}" type="range" class="form-range"
+                min="0" value=10 max="100" oninput="this.nextElementSibling.value = this.value">
+                <output name={{ measure.measureid }} id="{{ measure.measureid }}" for="rangeInput">10</output><span>%</span>
+         </span>
          </p>
          {% endfor %}
          <h3>Community Demographics</h3>
          <p>
          <label for="customRange1" class="form-label">Community Population</label>
+         <span class="slider">
          <input name="population" type="range" class="form-range" id="population"
-                min="0" max="100000", value="5000">
+                min="0" value=5000 max="100000", value="1000" oninput="this.nextElementSibling.value = this.value">
+                <output name="population" id="amount" for="rangeInput">5000</output>
+         </span>
          </p>
          <div class="form-check form-check-inline">
             {% for region in ["midwest", "northeast", "south", "southwest", "west"] %}
@@ -78,21 +81,9 @@
             {% endfor %}
           </div>
           <button type="submit" class="btn btn-primary">Submit</button>
-          <div >
-             <p>Here is the prediction: {{prediction}}</p>
-          </div>
+          <button type="button" class="btn btn-secondary">Secondary</button>
       </dl>
    </div>
     </form>
-    
-    <script>
-      var slider = document.getElementById("myRange");
-      var output = document.getElementById("demo");
-      output.innerHTML = slider.value;
-      
-      slider.oninput = function() {
-        output.innerHTML = this.value;
-      }
-      </script>
 </body>
 </html>

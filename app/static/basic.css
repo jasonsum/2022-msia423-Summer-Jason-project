@@ -9,9 +9,17 @@ body {
   background-color: rgb(187, 181, 211);
 }
 
-.form-range{
-  
+.slider {
+  float:right;
+  padding-right: 200px;
 }
+
+input[type="range"] {
+  width:400px;
+}
+/* .form-range{
+  
+} */
 
 /* 
 .slidecontainer {
