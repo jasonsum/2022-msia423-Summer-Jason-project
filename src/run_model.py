@@ -35,7 +35,7 @@ def validate_clean(places_df: pd.DataFrame,
 
     try:
         row_cnt = len(places_df)
-        logger.info("Number of rows in training data is %i", row_cnt)
+        logger.info("Number of rows in feature data is %i.", row_cnt)
         if row_cnt == 0:
             logger.error("An empty dataframe has been passed for training.")
             raise ValueError
@@ -111,7 +111,7 @@ def fit_model(places_df: pd.DataFrame,
 
     logger.info("%s model training", method)
     model = LinearRegression(**kwargs).fit(places_df[features], 
-                                   places_df[response])
+                                           places_df[response])
     coeffs : np.ndarray = model.coef_
     intercept : np.float64 = model.intercept_
     feature_nms : typing.List[str] = model.feature_names_in_
