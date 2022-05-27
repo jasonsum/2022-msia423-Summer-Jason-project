@@ -95,5 +95,9 @@ score:
       South: int
       Southwest: int
       training: int
+evaluate:
+  capture_rmse:
+    true_col: GHLTH
+    pred_col: prediction
 
 
