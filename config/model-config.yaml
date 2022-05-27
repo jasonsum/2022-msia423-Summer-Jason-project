@@ -96,8 +96,14 @@ score:
       Southwest: int
       training: int
 evaluate:
-  capture_rmse:
+  validate_df:
+    cols:
+      GHLTH: float
+      predictions: float
+  visualize_performance:
+    rmse: True
     true_col: GHLTH
-    pred_col: prediction
+    pred_col: predictions
+    comp_prop: True
 
 
