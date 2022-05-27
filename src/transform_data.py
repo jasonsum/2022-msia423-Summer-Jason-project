@@ -9,7 +9,7 @@ import typing
 
 import pandas as pd
 import numpy as np
-import botocore
+import boto3
 from sodapy import Socrata
 import sqlalchemy as sql
 import sqlalchemy.exc
