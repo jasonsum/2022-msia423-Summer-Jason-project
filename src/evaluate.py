@@ -4,6 +4,7 @@ Module evaluates test set predictions.
 
 import logging
 
+import numpy as np
 import boto3
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -13,7 +14,8 @@ logger = logging.getLogger(__name__)
 
 def capture_rmse(test_df : pd.DataFrame,
                  true_col : str = "GHLTH",
-                 pred_col : str = "prediction") -> float:
+                 pred_col : str = "predictions",
+                 comp_prop : bool = True) -> float:
     """
     Runs root mean squared error evaluation metrics on predictions against true values.
 
@@ -22,6 +24,8 @@ def capture_rmse(test_df : pd.DataFrame,
                                      Dataframe must contain true_col and pred_col as columns.
         true_col (str) : Dataframe column name containing true response values.
         pred_col (str) : Dataframe column name containing predicted response values.
+        comp_bool (bool) : If True, log-odds predictions and true values will be 
+                           converted to probabilities before RMSE calculated.
 
     Returns:
         Pandas dataframe of RMSE
@@ -32,9 +36,12 @@ def capture_rmse(test_df : pd.DataFrame,
         raise ValueError
 
     try:
-        rmse = mean_squared_error(test_df[true_col], 
-                                  test_df[pred_col],
-                                  squared=False)
+        true = test_df[true_col].copy()
+        preds = test_df[pred_col].copy()
+        if comp_prop: # convert both to probability
+            true = np.exp(true) / (1 + np.exp(true))
+            preds = np.exp(preds) / (1 + np.exp(preds))
+        rmse = mean_squared_error(true, preds, squared=False)
         logger.info("RMSE captured.")
     except ValueError as v_err:
         logger.error("There was a datatype mismatch or null value found")
@@ -54,7 +61,9 @@ def visualize_performance(test_df : pd.DataFrame,
                           save_file_path : str,
                           rmse : bool = True,
                           true_col : str = "GHLTH",
-                          pred_col : str = "prediction") -> None:
+                          pred_col : str = "predictions",
+                          comp_prop : bool = True,
+                          **kwargs) -> None:
     """
     Creates scatter plot of predictions vs. actual responses.
 
@@ -68,25 +77,33 @@ def visualize_performance(test_df : pd.DataFrame,
                          Default to "GHLTH".
         pred_col (str) : Dataframe column name containing predicted response values.
                          Defaults to "prediction".
+        comp_bool (bool) : If True, log-odds predictions and true values will be 
+                           converted to probabilities before RMSE calculated.
 
     Returns:
         None; saves plot
     """
 
     if rmse:
-        rmse_txt = str(capture_rmse(test_df, true_col, pred_col))
+        rmse_txt = str(round(capture_rmse(test_df, true_col, pred_col, comp_prop),5))
     else:
         rmse_txt = ''
-    
+    true = test_df[true_col].copy()
+    preds = test_df[pred_col].copy()
+    if comp_prop: # convert both to probability
+        true = np.exp(true) / (1 + np.exp(true))
+        preds = np.exp(preds) / (1 + np.exp(preds))
     try:
-        plt.figure(figsize = (10,10))
-        plt.scatter(test_df[true_col],
-                    test_df[pred_col],
-                    alpha = 0.7)
-        plt.title("Predicted vs. Actual Responses", fontstyle=22)
-        plt.xlabel("Actual Responses", fontstyle=18)
-        plt.ylabel("Predicted Responses", fontstyle=18)
-        plt.text(0, 1, rmse_txt, fontsize = 20)
+        plt.figure(figsize = (8,8))
+        plt.scatter(true,
+                    preds,
+                    alpha = 0.2,
+                    edgecolors='darkblue',
+                    **kwargs)
+        plt.title("Predicted vs. Actual Responses", fontsize=22)
+        plt.xlabel("Actual Responses", fontsize=18)
+        plt.ylabel("Predicted Responses", fontsize=18)
+        plt.text(0.1, 0.5, f"RMSE: {rmse_txt}", fontsize = 20)
         plt.savefig(save_file_path)
     except KeyError as k_err:
         logger.error("Test dataframe missing provided columns for prediction or true values.")

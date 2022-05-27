@@ -94,8 +94,8 @@ def fit_model(places_df: pd.DataFrame,
         kwargs (dict) : Additional parameters of sklearn.linear_model.LinearRegression.  
 
     Returns:
-        dict of coefficient name : values
-        trained model object
+        Dict of coefficient name : values
+        Trained LinearRegression model object
 
     """
     params = {}

@@ -18,7 +18,7 @@ from src.transform_data import import_file, validate_df, prep_data, scale_values
 from src.run_model import fit_model, add_params, dump_model
 from src.train_test_split import split_data
 from src.score import import_model, pred_responses
-from src.evaluate import capture_rmse
+from src.evaluate import visualize_performance
 
 # References
 from data.reference.state_region_mapping import states_region_mapping
@@ -154,8 +154,10 @@ if __name__ == '__main__':
     # Evaluate performance
     elif args.step == "evaluate":
         test_df = import_file(args.input)
-        rmse = capture_rmse(test_df, **mdl_config['evaluate']['capture_rmse'])
-        upload_file(rmse, args.output) # Save rmse dataframe
+        validate_df(test_df, **mdl_config['evaluate']['validate_df'])
+        visualize_performance(test_df,
+                             save_file_path = args.output,
+                             **mdl_config['evaluate']['visualize_performance'])
     else:
         parser.print_help()
 
