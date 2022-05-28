@@ -17,13 +17,13 @@ clean:
     columns: [StateDesc, CountyName, CountyFIPS, LocationID, TotalPopulation, Geolocation, MeasureId, Data_Value, Category, Short_Question_Text, Measure]
   validate_df:
     cols: 
-      StateDesc: str
-      CountyName: str
+      StateDesc: obj
+      CountyName: obj
       CountyFIPS: int
       LocationID: int
       TotalPopulation: int
-      Geolocation: str
-      MeasureId: str
+      Geolocation: obj
+      MeasureId: obj
       Data_Value: float
   prep_data:
     response: GHLTH
@@ -31,12 +31,12 @@ clean:
 featurize:
   validate_df:
     cols:
-      StateDesc: str
-      CountyName: str
+      StateDesc: obj
+      CountyName: obj
       CountyFIPS: int
       LocationID: int
       TotalPopulation: int
-      Geolocation: str
+      Geolocation: obj
       ACCESS2: float
       ARTHRITIS: float
       BINGE: float
