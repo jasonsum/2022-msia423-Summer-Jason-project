@@ -11,7 +11,7 @@ from sqlalchemy.ext.declarative import declarative_base
 
 from src.models import Measures
 
-logger = logging.getLogger(__file__)
+logger = logging.getLogger(__name__)
 
 Base = declarative_base()
 
