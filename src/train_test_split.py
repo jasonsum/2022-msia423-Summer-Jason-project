@@ -1,11 +1,9 @@
 """
-Module splits training and testing datasets
+Module splits training and testing datasets.
 """
 
-import typing
 import logging
 import typing
-import sys
 
 import pandas as pd
 import sklearn.model_selection

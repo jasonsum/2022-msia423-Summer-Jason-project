@@ -130,6 +130,9 @@ def pivot_measures (places_df : pd.DataFrame) -> pd.DataFrame:
     except TypeError as t_err:
         logger.error("Column Data_Value must be numeric.")
         raise TypeError("Column Data_Value must be numeric.") from t_err
+    except AttributeError as a_err:
+        logger.error("First argument must be a dataframe.")
+        raise AttributeError("First argument must be a dataframe.") from a_err
     except KeyError as k_err:
         logger.error("Required columns are missing.")
         logger.error("Please confirm columns StateDesc, CountyName, CountyFIPS, LocationID,\
@@ -138,7 +141,7 @@ def pivot_measures (places_df : pd.DataFrame) -> pd.DataFrame:
     else:
         places_pivot = places_pivot.rename_axis(None, axis=1)
 
-    return places_pivot
+    return places_pivot  # type: ignore
 
 def drop_null_responses(places_pivot : pd.DataFrame,
                         response : str) -> pd.DataFrame:
@@ -167,6 +170,9 @@ def drop_null_responses(places_pivot : pd.DataFrame,
     except KeyError as k_err:
         logger.error("Column passed as response could not be found.")
         raise KeyError("Provided column not found in dataframe.") from k_err
+    except AttributeError as a_err:
+        logger.error("First argument must be a dataframe.")
+        raise AttributeError("First argument must be a dataframe.") from a_err
     else:
         logger.info("Number of null response records dropped: %i",initial_count - new_count)
 
@@ -201,6 +207,9 @@ def drop_invalid_measures(places_pivot : pd.DataFrame,
     except KeyError as k_err:
         logger.error("Columns passed as invalid could not be found.")
         raise KeyError("Provided column not found in dataframe.") from k_err
+    except AttributeError as a_err:
+        logger.error("First argument must be a dataframe.")
+        raise AttributeError("First argument must be a dataframe.") from a_err
     
     return places_pivot
 

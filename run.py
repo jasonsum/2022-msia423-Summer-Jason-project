@@ -174,13 +174,16 @@ if __name__ == '__main__':
                     logger.error("Required or provided column(s) are missing from the dataframe; exiting.")
                     sys.exit(1)
                 except TypeError:
-                    logger.error("Data_Value column must be numeric; exiting.")
+                    logger.error("Data_Value column must be numeric and Column identifiers string; exiting.")
                     sys.exit(1)
                 except FileNotFoundError:
                     logger.error("An invalid file location has been provided; exiting.")
                     sys.exit(1)
                 except boto3.exceptions.NoCredentialsError:  # type: ignore
                     logger.error("Missing AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY credentials; exiting.")
+                    sys.exit(1)
+                except AttributeError:
+                    logger.error("First argument must be a dataframe; exiting.")
                     sys.exit(1)
                 except Exception as e:
                     logger.error("There was a problem saving to file: %s.", e)

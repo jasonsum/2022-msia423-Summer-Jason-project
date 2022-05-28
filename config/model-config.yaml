@@ -1,4 +1,4 @@
-data:
+ingest:
   import_places_api: 
     url: chronicdata.cdc.gov
     dataset_identifier: cwsq-ngmh
@@ -29,6 +29,8 @@ clean:
     response: GHLTH
     invalid_measures: [TEETHLOST, SLEEP, MAMMOUSE, DENTAL, COREW, COREM, COLON_SCREEN, CERVICAL, LPA, MHLTH, PHLTH]
 featurize:
+  import_file:
+    columns: [StateDesc, CountyName, CountyFIPS, LocationID, TotalPopulation, Geolocation, ACCESS2, ARTHRITIS, BINGE, BPHIGH, BPMED, CANCER, CASTHMA, CHD, CHECKUP, CHOLSCREEN, COPD, CSMOKING, DEPRESSION, DIABETES, GHLTH, HIGHCHOL, KIDNEY, OBESITY, STROKE]
   validate_df:
     cols:
       StateDesc: object
