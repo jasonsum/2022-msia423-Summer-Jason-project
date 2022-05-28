@@ -186,5 +186,5 @@ def one_hot_encode(places_pivot : pd.DataFrame,
         raise KeyError("Column(s) region or StateDesc are missing from dataframe.") from k_err
     else:
     # Create 1/0 encoded categorical variables for regions, dropping West
-        places_pivot = places_pivot.join(pd.get_dummies(places_pivot['region']).drop('West', axis=1))
+        places_pivot = places_pivot.join(pd.get_dummies(places_pivot['region'], dtype=int).drop('West', axis=1))
     return places_pivot
