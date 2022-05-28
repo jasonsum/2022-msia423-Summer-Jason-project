@@ -1,5 +1,5 @@
 """
-Module conducts predictive model training and provides trained model object
+Module conducts predictive model training and provides trained model object.
 """
 
 import typing

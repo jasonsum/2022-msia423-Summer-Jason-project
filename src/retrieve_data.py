@@ -1,5 +1,5 @@
 """
-Module retrieves PLACES data from API, uploads to S3, and imports from S3
+Module retrieves PLACES data from API, uploads to S3, and imports from S3.
 """
 
 import logging

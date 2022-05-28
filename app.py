@@ -1,3 +1,7 @@
+"""
+Executes flask app procedures for rendering pages and generating predictions.
+"""
+
 import logging
 import logging.config
 import sqlite3

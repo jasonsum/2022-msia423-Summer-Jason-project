@@ -1,10 +1,12 @@
-"""Ingests user input as features into table, enables querying of feature, parameter,
-and reference tables and renders query results and prediction for PLACES app."""
+"""
+Ingests user input as features into table, enables querying of feature, parameter,
+and reference tables and renders query results and prediction for PLACES app.
+"""
+
 # mypy: plugins = sqlmypy, plugins = flasksqlamypy
 import argparse
 import logging
 import logging.config
-import sqlite3
 import typing
 import math
 

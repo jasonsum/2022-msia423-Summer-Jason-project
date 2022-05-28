@@ -1,9 +1,11 @@
-"""Configures the subparsers for receiving command line arguments for each
- stage in the model pipeline and orchestrates their execution."""
+"""
+Configures the subparsers for receiving command line arguments for each
+stage in the model pipeline and orchestrates their execution.
+"""
+
 import argparse
 import logging
 import logging.config
-import os
 import yaml
 import sys
 
