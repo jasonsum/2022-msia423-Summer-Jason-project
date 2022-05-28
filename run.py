@@ -44,11 +44,11 @@ if __name__ == '__main__':
 
     # Create parsers to determine transaction
     parser = argparse.ArgumentParser(
-        description="Build database, acquire data, transform data\
+        description="Build and populate database, acquire data, clean, featurize\
                      train model, score model, and/or evaluate model.")
 
-    parser.add_argument('step', help='Which step to run', choices=['create_db', 'ingest', 
-                                                                   'transform', 'train', 'score'])
+    parser.add_argument('step', help='Which step to run', choices=['create_db', 'add_measures', 'ingest', 'clean', 
+                                                                   'featurize', 'train', 'score', 'evaluate'])
     parser.add_argument('--config', default='config/model-config.yaml', help='Path to configuration file')
     parser.add_argument('--input', '-i', default=None, help='Path to retrieve input file')
     parser.add_argument('--output', '-o', default=None, help='Path to save transaction output file')
@@ -65,6 +65,12 @@ if __name__ == '__main__':
             logger.error("Specify SQLALCHEMY_DATABASE_URI environment variable.")
             sys.exit(1)
         create_db(config.SQLALCHEMY_DATABASE_URI) # Create tables
+    
+    # Population measurement definitions
+    elif args.step == "add_measures":
+        if config.SQLALCHEMY_DATABASE_URI is None:
+            logger.error("Specify SQLALCHEMY_DATABASE_URI environment variable.")
+            sys.exit(1)
         add_references(config.SQLALCHEMY_DATABASE_URI) # Add metric definitions
     
     # Get raw data from API
