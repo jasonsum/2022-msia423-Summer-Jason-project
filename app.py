@@ -63,7 +63,8 @@ except:
 
 @app.route('/')
 def index():
-    """Main view that lists measurements in the database.
+    """
+    Main view that lists measurements in the database.
 
     Create view into index page that uses data queried from Track database and
     inserts it into the app/templates/index.html template.
@@ -95,13 +96,14 @@ def index():
         return render_template('error.html')
     except:
         traceback.print_exc()
-        logger.error("Not able to display table results, error page returned")
+        logger.error("Not able to display table results, error page returned.")
         return render_template('error.html')
 
 
 @app.route('/add', methods=['POST'])
 def add_entry():
-    """View that process a POST to Features table
+    """
+    View that process a POST to Features table
 
     Returns:
         redirect to index page
