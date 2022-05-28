@@ -12,7 +12,7 @@ model:
     - regression
     - health
     - population health
-transform_data:
+clean:
   import_file:
     columns: [StateDesc, CountyName, CountyFIPS, LocationID, TotalPopulation, Geolocation, MeasureId, Data_Value, Category, Short_Question_Text, Measure]
   validate_df:
@@ -28,12 +28,41 @@ transform_data:
   prep_data:
     response: GHLTH
     invalid_measures: [TEETHLOST, SLEEP, MAMMOUSE, DENTAL, COREW, COREM, COLON_SCREEN, CERVICAL, LPA, MHLTH, PHLTH]
+featurize:
+  validate_df:
+    cols:
+      StateDesc: str
+      CountyName: str
+      CountyFIPS: int
+      LocationID: int
+      TotalPopulation: int
+      Geolocation: str
+      ACCESS2: float
+      ARTHRITIS: float
+      BINGE: float
+      BPHIGH: float
+      BPMED: float
+      CANCER: float
+      CASTHMA: float
+      CHD: float
+      CHECKUP: float
+      CHOLSCREEN: float
+      COPD: float
+      CSMOKING: float
+      DEPRESSION: float
+      DIABETES: float
+      GHLTH: float
+      HIGHCHOL: float
+      KIDNEY: float
+      OBESITY: float
+      STROKE: float
+  reformat_measures:
     make_floats: [ACCESS2, ARTHRITIS, BINGE, BPHIGH, BPMED, CANCER, CASTHMA, CHD, CHECKUP, CHOLSCREEN, COPD, CSMOKING, DEPRESSION, DIABETES, GHLTH, HIGHCHOL, KIDNEY, OBESITY, STROKE]
     make_logit: GHLTH
-  scale_values:
-    columns: TotalPopulation
   one_hot_encode:
     states_region: True 
+  scale_values:
+    columns: TotalPopulation
 train_test_split:
   test_size: 0.3
   random_state: 42

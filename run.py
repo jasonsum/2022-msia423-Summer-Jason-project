@@ -14,7 +14,8 @@ import config.config as config
 from src.models import create_db
 from src.add_definitions import add_references
 from src.retrieve_data import import_places_api, upload_file
-from src.transform_data import import_file, validate_df, prep_data, scale_values, one_hot_encode
+from src.clean import import_file, validate_df, prep_data
+from src.featurize import reformat_measures, scale_values, one_hot_encode
 from src.run_model import fit_model, add_params, dump_model
 from src.train_test_split import split_data
 from src.score import import_model, pred_responses
@@ -46,8 +47,6 @@ if __name__ == '__main__':
 
     parser.add_argument('step', help='Which step to run', choices=['create_db', 'ingest', 
                                                                    'transform', 'train', 'score'])
-    parser.add_argument("--engine_string", default=config.SQLALCHEMY_DATABASE_URI,
-                           help="SQLAlchemy connection URI for database")
     parser.add_argument('--config', default='config/model-config.yaml', help='Path to configuration file')
     parser.add_argument('--input', '-i', default=None, help='Path to retrieve input file')
     parser.add_argument('--output', '-o', default=None, help='Path to save transaction output file')
@@ -61,17 +60,10 @@ if __name__ == '__main__':
     # Create database
     if args.step == 'create_db':
         if config.SQLALCHEMY_DATABASE_URI is None:
-            if args.engine_string:
-                engine_string = args.engine_string
-            else:
-                logger.error("Specify SQLALCHEMY_DATABASE_URI environment variable.")
-                logger.error("Otherwise, use engine_string argument; exiting.")
-                sys.exit(1)
-        else:
-            engine_string = config.SQLALCHEMY_DATABASE_URI
-        
-        create_db(engine_string) # Create tables
-        add_references(engine_string) # Add metric definitions
+            logger.error("Specify SQLALCHEMY_DATABASE_URI environment variable.")
+            sys.exit(1)
+        create_db(config.SQLALCHEMY_DATABASE_URI) # Create tables
+        add_references(config.SQLALCHEMY_DATABASE_URI) # Add metric definitions
     
     # Get raw data from API
     elif args.step == "ingest":
@@ -81,43 +73,39 @@ if __name__ == '__main__':
                                      socrata_password=config.SOCRATA_PASSWORD)  # type: ignore
         upload_file(raw_data, args.output)
     
-    # Clean and transform data into feature set
-    elif args.step == "transform":
-        transform_data = mdl_config['transform_data']
-        places_df = import_file(args.input, **transform_data['import_file'])
-        validate_df(places_df, **transform_data['validate_df'])
-        places_pivot = prep_data(places_df, **transform_data['prep_data'])
-        if transform_data['one_hot_encode']['states_region']:
+    # Clean raw data
+    elif args.step == "clean":
+        clean_data = mdl_config['clean']
+        places_df = import_file(args.input, **clean_data['import_file'])
+        validate_df(places_df, **clean_data['validate_df'])
+        places_pivot = prep_data(places_df, **clean_data['prep_data'])
+        upload_file(places_pivot, args.output)
+    
+    # Featurize clean data
+    elif args.step == "featurize":
+        featurize_data = mdl_config['featurize']
+        places_pivot = import_file(args.input, **featurize_data['import_file'])
+        validate_df(places_pivot, **featurize_data['validate_df'])
+        places_pivot = reformat_measures(places_pivot,  **featurize_data['reformat_measures'])
+        if featurize_data['one_hot_encode']['states_region']:
             places_pivot = one_hot_encode(places_pivot,
                                           states_to_regions = states_region_mapping)
-        if transform_data['scale_values']['columns']:
+        if featurize_data['scale_values']['columns']:
             # Capture correct RDS
             if config.SQLALCHEMY_DATABASE_URI is None:
-                if args.engine_string:
-                    engine_string = args.engine_string
-                else:
-                    logger.error("Specify SQLALCHEMY_DATABASE_URI environment variable.")
-                    logger.error("Otherwise, use engine_string argument; exiting.")
-                    sys.exit(1)
-            else:
-                engine_string = config.SQLALCHEMY_DATABASE_URI
-            places_pivot = scale_values(engine_string,
+                logger.error("Specify SQLALCHEMY_DATABASE_URI environment variable.")
+                sys.exit(1)
+            places_pivot = scale_values(config.SQLALCHEMY_DATABASE_URI,
                                         places_pivot,
-                                        **transform_data['scale_values'])
+                                        **featurize_data['scale_values'])
         upload_file(places_pivot, args.output)
     
     # Train model
     elif args.step == "train":
         # Capture correct RDS
         if config.SQLALCHEMY_DATABASE_URI is None:
-            if args.engine_string:
-                engine_string = args.engine_string
-            else:
-                logger.error("Specify SQLALCHEMY_DATABASE_URI environment variable.")
-                logger.error("Otherwise, use engine_string argument; exiting.")
-                sys.exit(1)
-        else:
-            engine_string = config.SQLALCHEMY_DATABASE_URI
+            logger.error("Specify SQLALCHEMY_DATABASE_URI environment variable.")
+            sys.exit(1)
         
         # Import data
         train_model = mdl_config['train_model']
@@ -136,7 +124,7 @@ if __name__ == '__main__':
                            train_model['features'],
                            train_model['response'],
                            **train_model['params'])
-        add_params(engine_string, params)
+        add_params(config.SQLALCHEMY_DATABASE_URI, params)
         dump_model(model,args.model)
 
     # Score model
