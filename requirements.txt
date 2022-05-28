@@ -13,3 +13,4 @@ sodapy==2.1.0
 scikit-learn==1.1.0
 numpy==1.22.3
 matplotlib==3.5.1
+pytest==6.2.3
