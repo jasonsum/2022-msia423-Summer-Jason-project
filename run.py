@@ -128,10 +128,10 @@ if __name__ == '__main__':
         # Train model
         training_set = combined_df.loc[combined_df.training == 1].copy()
         params, model = fit_model(training_set,
-                           train_model['method'],
-                           train_model['features'],
-                           train_model['response'],
-                           **train_model['params'])
+                                  features = train_model['features'],
+                                  response = train_model['response'],
+                                  method = train_model['method'],
+                                  **train_model['params'])
         add_params(config.SQLALCHEMY_DATABASE_URI, params)
         dump_model(model,args.model)
 
