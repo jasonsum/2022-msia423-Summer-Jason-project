@@ -48,7 +48,9 @@ def split_data(places_df: pd.DataFrame,
             combined_df = pd.concat([train, test], axis=0)  # type: ignore
         except TypeError:
             logger.error("test_size must be a float and random_state an integer.")
+            raise TypeError("test_size must be a float and random_state an integer.")
         except ValueError:
             logger.error("Value of test_size must be between 0 and 1.")
+            raise ValueError("Value of test_size must be between 0 and 1.")
 
     return combined_df  # type: ignore
