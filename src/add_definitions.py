@@ -1,6 +1,9 @@
-"""Adds definitions to Measures table for metric references."""
-import os
+"""
+Adds definitions to Measures table for metric references.
+"""
+
 import logging
+
 import sqlalchemy as sql
 import sqlalchemy.exc
 import sqlalchemy.orm
@@ -8,8 +11,6 @@ from sqlalchemy.ext.declarative import declarative_base
 
 from src.models import Measures
 
-# set up looging config
-logging.basicConfig(format="%(levelname)s:%(message)s", level=logging.DEBUG)
 logger = logging.getLogger(__file__)
 
 Base = declarative_base()

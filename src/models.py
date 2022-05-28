@@ -1,15 +1,15 @@
-"""Creates table structure for features, model parameters, and references for PLACES project."""
-import os
+"""
+Creates table structure for features, model parameters, and references for PLACES project.
+"""
+
 import logging
+
 import sqlalchemy as sql
 import sqlalchemy.exc
 import sqlalchemy.orm
 from sqlalchemy.sql import func
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, MetaData, Float
 
-# set up looging config
-logging.basicConfig(format="%(levelname)s:%(message)s", level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 Base = declarative_base()
