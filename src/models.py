@@ -134,7 +134,7 @@ def create_db(engine_string : str) -> None:
     try:
         engine.connect()
     except sqlalchemy.exc.OperationalError as e:
-        logger.error("Could not connect to database!")
+        logger.error("Could not connect to database.")
         logger.debug("Database URI: %s", )
         raise e
 

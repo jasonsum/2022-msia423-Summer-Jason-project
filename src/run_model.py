@@ -104,7 +104,7 @@ def fit_model(places_df: pd.DataFrame,
     logger.info("%s model training...", method)
     try:
         model = LinearRegression(**kwargs).fit(places_df[features], 
-                                            places_df[response])
+                                               places_df[response])
     except TypeError as t_err:
         logger.error("Params and columns must be valid for sklearn.linear_model.LinearRegression")
         raise TypeError("Params and columns must be valid for sklearn.linear_model.LinearRegression") from t_err

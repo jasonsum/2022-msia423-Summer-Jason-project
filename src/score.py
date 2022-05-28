@@ -69,6 +69,6 @@ def pred_responses(trained_model : LinearRegression,
         raise ValueError("X_test should be 2D of feature values.") from v_err
     except KeyError as k_err:
         logger.error("The provided columns could not be found in the dataframe.")
-        raise ValueError("The provided columns could not be found in the dataframe,") from k_err
+        raise KeyError("The provided columns could not be found in the dataframe,") from k_err
 
     return test_df

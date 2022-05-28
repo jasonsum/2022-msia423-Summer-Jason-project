@@ -46,7 +46,7 @@ def capture_rmse(test_df : pd.DataFrame,
         if rmse > .05:
             logger.warning("Model RMSE exceeds 5.")
     except ValueError as v_err:
-        logger.error("There was a datatype mismatch or null value found")
+        logger.error("There was a datatype mismatch or null value found.")
         raise ValueError from v_err
     except KeyError as k_err:
         logger.error("Test dataframe missing provided columns for prediction or true values.")

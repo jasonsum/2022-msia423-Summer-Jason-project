@@ -53,7 +53,7 @@ def import_file(file_path : str,
             "Missing AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY credentials.") from c_err
     except FileNotFoundError as f_err:
         logger.error("Please provide a valid file location to import data.")
-        raise FileExistsError("Please provide a valid file location to import data.") from f_err
+        raise FileNotFoundError("Please provide a valid file location to import data.") from f_err
     except KeyError as k_err:
         logger.error('The selected columns were not found in the file.')
         raise KeyError('The selected columns were not found in the file.') from k_err
@@ -232,8 +232,8 @@ def prep_data(places_df : pd.DataFrame,
     except KeyError as k_err:
         logger.error("Columns passed for transformation could not be found.")
         raise KeyError("Columns passed for transformation could not be found.") from k_err
-    except ValueError as v_err:
-        logger.error("Columns passed for transformation must be numeric.")
-        raise KeyError("Columns passed for transformation must be numeric.") from v_err
+    except TypeError as v_err:
+        logger.error("Column Data_Value must be numeric.")
+        raise TypeError("Column Data_Value must be numeric.") from v_err
 
     return places_pivot

@@ -122,12 +122,12 @@ def upload_file(input_df : pd.DataFrame,
             'Please provide credentials AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY env variables.'
             )
         raise boto3.exceptions.NoCredentialsError(  # type: ignore
-            "Missing AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY credentials") from c_err
+            "Missing AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY credentials.") from c_err
     except FileNotFoundError as f_err:
         logger.error("Please provide a valid file location to persist data.")
-        raise FileExistsError("Please provide a valid file location to persist data.") from f_err
+        raise FileNotFoundError("Please provide a valid file location to persist data.") from f_err
     except Exception as e:
             logger.error("Exiting due to error: %s", e)
             raise Exception from e
     else:
-        logger.info('PLACES data uploaded to %s', save_file_path)
+        logger.info('PLACES data uploaded to %s.', save_file_path)

@@ -117,9 +117,9 @@ def scale_values(engine_string : str,
     except KeyError as k_err:
         logger.error("Columns passed for transformation could not be found.")
         raise KeyError("Columns passed for transformation could not be found.") from k_err
-    except ValueError as v_err:
+    except TypeError as v_err:
         logger.error("Columns passed for transformation must be numeric.")
-        raise KeyError("Columns passed for transformation must be numeric.") from v_err
+        raise TypeError("Columns passed for transformation must be numeric.") from v_err
     return places_pivot
 
 def reformat_measures(places_pivot : pd.DataFrame,
@@ -152,9 +152,9 @@ def reformat_measures(places_pivot : pd.DataFrame,
     except KeyError as k_err:
         logger.error("Columns passed for transformation could not be found.")
         raise KeyError("Columns passed for transformation could not be found.") from k_err
-    except ValueError as v_err:
+    except TypeError as v_err:
         logger.error("Columns passed for transformation must be numeric.")
-        raise KeyError("Columns passed for transformation must be numeric.") from v_err
+        raise TypeError("Columns passed for transformation must be numeric.") from v_err
 
     return places_pivot
 
@@ -182,8 +182,8 @@ def one_hot_encode(places_pivot : pd.DataFrame,
         if sum(places_pivot['region'].isna()) > 0:
             logger.warning("Unmapped state names exist.")
     except KeyError as k_err:
-        logger.error("Columns passed for transformation could not be found.")
-        raise KeyError("Columns passed for transformation could not be found.") from k_err
+        logger.error("Column(s) region or StateDesc are missing from dataframe.")
+        raise KeyError("Column(s) region or StateDesc are missing from dataframe.") from k_err
     else:
     # Create 1/0 encoded categorical variables for regions, dropping West
         places_pivot = places_pivot.join(pd.get_dummies(places_pivot['region']).drop('West', axis=1))
