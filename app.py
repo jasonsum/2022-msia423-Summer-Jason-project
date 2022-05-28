@@ -143,7 +143,6 @@ def add_entry():
                                             south=int(regions['south']),
                                             southwest=int(regions['southwest']))
         logger.info("New prediction recorded.")
-        pred_manager.remove_inputs()
         return render_template('index.html', 
                                hlth_outcomes=hlth_outcomes,
                                hlth_behaviors=hlth_behaviors,
