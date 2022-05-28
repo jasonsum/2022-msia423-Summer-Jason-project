@@ -42,7 +42,9 @@ def capture_rmse(test_df : pd.DataFrame,
             true = np.exp(true) / (1 + np.exp(true))
             preds = np.exp(preds) / (1 + np.exp(preds))
         rmse = mean_squared_error(true, preds, squared=False)
-        logger.info("RMSE captured.")
+        logger.info("Model RMSE of %f captured.",rmse)
+        if rmse > .05:
+            logger.warning("Model RMSE exceeds 5.")
     except ValueError as v_err:
         logger.error("There was a datatype mismatch or null value found")
         raise ValueError from v_err
