@@ -40,7 +40,7 @@ The second component, is the open web application referenced previously. The web
 * [Running the app ](#Running-the-app)
 	* [Building the image ](#1.-Initialize-the-database)
 	* [Running the app ](#1.-Initialize-the-database)
-	* [2. Kill the container ](#2.-Configure-Flask-app)
+	* [Kill the container ](#2.-Configure-Flask-app)
 * [Testing](#Testing)
 * [Mypy](#Mypy)
 * [Pylint](#Pylint)
@@ -300,69 +300,22 @@ docker kill flask-app
 
 ## Testing
 
-Run the following:
+To execute unit tests (with docker), first create the docker image with the below. 
 
+    
 ```bash
- docker build -f dockerfiles/Dockerfile.test -t pennylanetest .
+docker build -f dockerfiles/Dockerfile.test -t final-project-test . 
 ```
 
-To run the tests, run: 
+Next, the below command will execute the unit tests in tests/ from the container.
 
 ```bash
- docker run pennylanetest
+docker run final-project-test
 ```
-
-The following command will be executed within the container to run the provided unit tests under `test/`:  
-
+ Alternatively, to execute the same unit testing procedure with Makefiles. Run the below statements.
 ```bash
-python -m pytest
-``` 
-
-## Mypy
-
-Run the following:
-
-```bash
- docker build -f dockerfiles/Dockerfile.mypy -t pennymypy .
+make test-image
 ```
-
-To run mypy over all files in the repo, run: 
-
 ```bash
- docker run pennymypy .
-```
-To allow for quick iteration, mount your entire repo so changes in Python files are detected:
-
-
-```bash
- docker run --mount type=bind,source="$(pwd)"/,target=/app/ pennymypy .
-```
-
-To run mypy for a single file, run: 
-
-```bash
- docker run pennymypy run.py
-```
-
-## Pylint
-
-Run the following:
-
-```bash
- docker build -f dockerfiles/Dockerfile.pylint -t pennylint .
-```
-
-To run pylint for a file, run:
-
-```bash
- docker run pennylint run.py 
-```
-
-(or any other file name, with its path relative to where you are executing the command from)
-
-To allow for quick iteration, mount your entire repo so changes in Python files are detected:
-
-
-```bash
- docker run --mount type=bind,source="$(pwd)"/,target=/app/ pennylint run.py
+make unit-tests
 ```
