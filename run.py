@@ -61,7 +61,7 @@ if __name__ == '__main__':
 
     # Load configuration file
     try:
-        with open('config/model-config.yaml', 'r') as f:
+        with open(args.config, 'r') as f:
             mdl_config = yaml.load(f, Loader = yaml.FullLoader)
     except FileNotFoundError:
         logger.error("Please provide a valid configuration file; exiting.")
