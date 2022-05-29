@@ -26,13 +26,13 @@ def test_fit_model():
     """
 
     # Define expected output
-    param_true = {'access2': 3.594, 'binge': 2.582, 'intercept': -2.648}
+    param_true = {"access2": 3.594, "binge": 2.582, "intercept": -2.648}
 
     # Create test output
     params_test, _ = fit_model(df_in,
                           features = ["ACCESS2",
                                       "BINGE"],
-                          response = 'GHLTH',
+                          response = "GHLTH",
                           method = "linearregression",
                           fit_intercept=True)
     # Round to avoid floating point issues
@@ -52,10 +52,10 @@ def test_fit_model_key_err():
     # Create test output
     with pytest.raises(KeyError):
         fit_model(df_in,
-                  features = ['ACCESS2', 'ARTHRITIS', 'BINGE', 'BPHIGH', 'BPMED', 'CANCER', 'CASTHMA',
-                              'CHD', 'CHECKUP', 'CHOLSCREEN', 'COPD', 'CSMOKING', 'DEPRESSION',
-                              'DIABETES', 'HIGHCHOL', 'KIDNEY', 'OBESITY', 'STROKE',
-                              'Midwest', 'Northeast', 'South', 'Southwest', 'scaled_TotalPopulation'],
-                  response = 'Not a column',
+                  features = ["ACCESS2", "ARTHRITIS", "BINGE", "BPHIGH", "BPMED", "CANCER", "CASTHMA",
+                              "CHD", "CHECKUP", "CHOLSCREEN", "COPD", "CSMOKING", "DEPRESSION",
+                              "DIABETES", "HIGHCHOL", "KIDNEY", "OBESITY", "STROKE",
+                              "Midwest", "Northeast", "South", "Southwest", "scaled_TotalPopulation"],
+                  response = "Not a column",
                   method = "linearregression",
                   fit_intercept=True)

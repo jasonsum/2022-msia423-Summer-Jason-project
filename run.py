@@ -41,34 +41,34 @@ AWS_ACCESS_KEY_ID
 AWS_SECRET_ACCESS_KEY
 """
 
-logging.config.fileConfig('config/logging/local.conf')
-logger = logging.getLogger('model_pipeline')
+logging.config.fileConfig("config/logging/local.conf")
+logger = logging.getLogger("model_pipeline")
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     # Create parsers to determine transaction
     parser = argparse.ArgumentParser(
         description="Build and populate database, acquire data, clean, featurize\
                      train model, score model, and/or evaluate model.")
 
-    parser.add_argument('step', help='Which step to run', choices=['create_db', 'add_measures', 'ingest', 'clean', 
-                                                                   'featurize', 'train', 'score', 'evaluate'])
-    parser.add_argument('--config', default='config/model-config.yaml', help='Path to configuration file')
-    parser.add_argument('--input', '-i', default=None, help='Path to retrieve input file')
-    parser.add_argument('--output', '-o', default=None, help='Path to save transaction output file')
-    parser.add_argument('--model', '-m', default=None, help='Path to trained model object')
+    parser.add_argument("step", help="Which step to run", choices=["create_db", "add_measures", "ingest", "clean", 
+                                                                   "featurize", "train", "score", "evaluate"])
+    parser.add_argument("--config", default="config/model-config.yaml", help="Path to configuration file")
+    parser.add_argument("--input", "-i", default=None, help="Path to retrieve input file")
+    parser.add_argument("--output", "-o", default=None, help="Path to save transaction output file")
+    parser.add_argument("--model", "-m", default=None, help="Path to trained model object")
     args = parser.parse_args()
 
     # Load configuration file
     try:
-        with open(args.config, 'r') as f:
+        with open(args.config, "r") as f:
             mdl_config = yaml.load(f, Loader = yaml.FullLoader)
     except FileNotFoundError:
         logger.error("Please provide a valid configuration file; exiting.")
         sys.exit(1)
     
     # Create database
-    if args.step == 'create_db':
+    if args.step == "create_db":
         if config.SQLALCHEMY_DATABASE_URI is None:
             logger.error("Specify SQLALCHEMY_DATABASE_URI environment variable.")
             sys.exit(1)
@@ -98,7 +98,7 @@ if __name__ == '__main__':
             logger.error("Configuration file is missing section for selected step; exiting.")
             sys.exit(1)
         try:
-            raw_data = import_places_api(**mdl_config['ingest']['import_places_api'],
+            raw_data = import_places_api(**mdl_config["ingest"]["import_places_api"],
                                         app_token=config.SOCRATA_TOKEN,   # type: ignore
                                         socrata_username=config.SOCRATA_USERNAME,   # type: ignore
                                         socrata_password=config.SOCRATA_PASSWORD)  # type: ignore
@@ -133,11 +133,11 @@ if __name__ == '__main__':
         if not mdl_config["clean"]:
             logger.error("Configuration file is missing section for selected step; exiting.")
             sys.exit(1)
-        clean_data = mdl_config['clean']
+        clean_data = mdl_config["clean"]
         
         # Import file 
         try:
-            places_df = import_file(args.input, **clean_data['import_file'])
+            places_df = import_file(args.input, **clean_data["import_file"])
         except boto3.exceptions.NoCredentialsError:  # type: ignore
             logger.error("Missing AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY credentials; exiting.")
             sys.exit(1)
@@ -154,7 +154,7 @@ if __name__ == '__main__':
         else:
             # Validate data
             try:
-                validate_df(places_df, **clean_data['validate_df'])
+                validate_df(places_df, **clean_data["validate_df"])
             except ValueError:
                 logger.error(
                     "Dataframe has no records, duplicate records, or contains null values; exiting.")
@@ -168,7 +168,7 @@ if __name__ == '__main__':
             else:
                 # Clean and save
                 try:
-                    places_pivot = prep_data(places_df, **clean_data['prep_data'])
+                    places_pivot = prep_data(places_df, **clean_data["prep_data"])
                     upload_file(places_pivot, args.output)
                 except KeyError:
                     logger.error("Required or provided column(s) are missing from the dataframe; exiting.")
@@ -196,11 +196,11 @@ if __name__ == '__main__':
         if not mdl_config["featurize"]:
             logger.error("Configuration file is missing section for selected step; exiting.")
             sys.exit(1)
-        featurize_data = mdl_config['featurize']
+        featurize_data = mdl_config["featurize"]
 
         # Import file
         try:
-            places_pivot = import_file(args.input, **featurize_data['import_file'])
+            places_pivot = import_file(args.input, **featurize_data["import_file"])
         except boto3.exceptions.NoCredentialsError:  # type: ignore
                 logger.error("Missing AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY credentials; exiting.")
                 sys.exit(1)
@@ -218,7 +218,7 @@ if __name__ == '__main__':
         # Validate data
         else:
             try:
-                validate_df(places_pivot, **featurize_data['validate_df'])
+                validate_df(places_pivot, **featurize_data["validate_df"])
             except ValueError:
                 logger.error(
                     "Dataframe has no records, duplicate records, or contains null values; exiting.")
@@ -232,18 +232,18 @@ if __name__ == '__main__':
             else:
                 #  Featurize data
                 try:
-                    places_pivot = reformat_measures(places_pivot,  **featurize_data['reformat_measures'])
-                    if featurize_data['one_hot_encode']['states_region']:
+                    places_pivot = reformat_measures(places_pivot,  **featurize_data["reformat_measures"])
+                    if featurize_data["one_hot_encode"]["states_region"]:
                         places_pivot = one_hot_encode(places_pivot,
                                                     states_to_regions = states_region_mapping)
-                    if featurize_data['scale_values']['columns']:
+                    if featurize_data["scale_values"]["columns"]:
                         # Capture correct RDS
                         if config.SQLALCHEMY_DATABASE_URI is None:
                             logger.error("Specify SQLALCHEMY_DATABASE_URI environment variable.")
                             sys.exit(1)
                         places_pivot = scale_values(config.SQLALCHEMY_DATABASE_URI,
                                                     places_pivot,
-                                                    **featurize_data['scale_values'])
+                                                    **featurize_data["scale_values"])
                 except KeyError:
                     logger.error("Please check your columns. Missing missing column(s) necessary for featurization are missing; exiting.")
                     sys.exit(1)
@@ -271,7 +271,7 @@ if __name__ == '__main__':
         if not mdl_config["clean"]:
             logger.error("Configuration file is missing section for selected step; exiting.")
             sys.exit(1)
-        train_model = mdl_config['train_model']
+        train_model = mdl_config["train_model"]
         
         # Capture correct RDS
         if config.SQLALCHEMY_DATABASE_URI is None:
@@ -281,7 +281,7 @@ if __name__ == '__main__':
         # Import file 
         try:
             places_df = import_file(args.input,
-                                    train_model['features'] + [train_model['response']])
+                                    train_model["features"] + [train_model["response"]])
         except boto3.exceptions.NoCredentialsError:  # type: ignore
                 logger.error("Missing AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY credentials; exiting.")
                 sys.exit(1)
@@ -298,7 +298,7 @@ if __name__ == '__main__':
         else:
             # Validate data
             try:
-                validate_df(places_df, **train_model['validate_df'])
+                validate_df(places_df, **train_model["validate_df"])
             except ValueError:
                 logger.error(
                     "Dataframe has no records, duplicate records, or contains null values; exiting.")
@@ -312,7 +312,7 @@ if __name__ == '__main__':
             else:
                 try:
                     # Split into train-test and save file
-                    combined_df = split_data(places_df, **mdl_config['train_test_split'])
+                    combined_df = split_data(places_df, **mdl_config["train_test_split"])
                     upload_file(combined_df, args.output) # Save train-test dataframe
                 except TypeError:
                     logger.error("test_size must be a float and random_state an integer; exiting")
@@ -335,10 +335,10 @@ if __name__ == '__main__':
                     try:
                         training_set = combined_df.loc[combined_df.training == 1].copy()
                         params, model = fit_model(training_set,
-                                                  features = train_model['features'],
-                                                  response = train_model['response'],
-                                                  method = train_model['method'],
-                                                  **train_model['params'])
+                                                  features = train_model["features"],
+                                                  response = train_model["response"],
+                                                  method = train_model["method"],
+                                                  **train_model["params"])
                         add_params(config.SQLALCHEMY_DATABASE_URI, params)
                         dump_model(model,args.model)
                     except TypeError:
@@ -391,7 +391,7 @@ if __name__ == '__main__':
         else:
             # Validate data
             try:
-                validate_df(combined_df, **mdl_config['score']['validate_df'])
+                validate_df(combined_df, **mdl_config["score"]["validate_df"])
             except ValueError:
                 logger.error(
                     "Dataframe has no records, duplicate records, or contains null values; exiting.")
@@ -409,7 +409,7 @@ if __name__ == '__main__':
                     # Generate predictions
                     test_df = pred_responses(model, 
                                             test_df,
-                                            mdl_config['train_model']['features'])
+                                            mdl_config["train_model"]["features"])
                     upload_file(test_df, args.output) # Save test predictions dataframe
                 
                 except ValueError:
@@ -455,7 +455,7 @@ if __name__ == '__main__':
         else:
             # Validate data
             try:
-                validate_df(test_df, **mdl_config['evaluate']['validate_df'])
+                validate_df(test_df, **mdl_config["evaluate"]["validate_df"])
             except ValueError:
                 logger.error(
                     "Dataframe has no records, duplicate records, or contains null values; exiting.")
@@ -471,7 +471,7 @@ if __name__ == '__main__':
                 try:
                     visualize_performance(test_df,
                                         save_file_path = args.output,
-                                        **mdl_config['evaluate']['visualize_performance'])
+                                        **mdl_config["evaluate"]["visualize_performance"])
                 except ValueError:
                     logger.error("There was a datatype mismatch or null value found; exiting.")
                     sys.exit(1)

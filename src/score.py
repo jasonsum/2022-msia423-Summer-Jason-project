@@ -32,7 +32,7 @@ def import_model(save_path_name : str) -> LinearRegression:
         raise FileNotFoundError("A valid file path and name must be provided.") from f_err
     except boto3.exceptions.NoCredentialsError as c_err:  # type: ignore
         logger.error(
-            'Please provide credentials AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY env variables.'
+            "Please provide credentials AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY env variables."
             )
         raise boto3.exceptions.NoCredentialsError(  # type: ignore
             "Missing AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY credentials") from c_err
@@ -63,7 +63,7 @@ def pred_responses(trained_model : LinearRegression,
         logger.error("X_test must be a non-empty 2D dataset.")
         raise ValueError("X_test cannot be of length zero.")
     try:
-        test_df['predictions'] = trained_model.predict(test_df[features])
+        test_df["predictions"] = trained_model.predict(test_df[features])
     except ValueError as v_err:
         logger.error("X_test should be 2D of feature values.")
         raise ValueError("X_test should be 2D of feature values.") from v_err

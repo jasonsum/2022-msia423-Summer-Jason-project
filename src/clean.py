@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 def import_file(file_path : str,
                 columns : typing.Optional[typing.List[str]] = None,
-                sep : str = ',',
+                sep : str = ",",
                 **kwargs) -> pd.DataFrame:
     """
     Imports CDC PLACES data from provided location.
@@ -31,7 +31,7 @@ def import_file(file_path : str,
         columns (list[str], Optional) : Columns of dataframe to include.
                                         Defaults to None.
         sep (str) : Delimeter character.
-                    Defaults to ',' for csv.
+                    Defaults to "," for csv.
         kwargs (dict) : Additional parameters of pandas.read_csv.
 
     Returns:
@@ -47,7 +47,7 @@ def import_file(file_path : str,
                                             **kwargs)
     except boto3.exceptions.NoCredentialsError as c_err:  # type: ignore
         logger.error(
-            'Please provide credentials AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY env variables.'
+            "Please provide credentials AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY env variables."
             )
         raise boto3.exceptions.NoCredentialsError(  # type: ignore
             "Missing AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY credentials.") from c_err
@@ -55,16 +55,16 @@ def import_file(file_path : str,
         logger.error("Please provide a valid file location to import data.")
         raise FileNotFoundError("Please provide a valid file location to import data.") from f_err
     except KeyError as k_err:
-        logger.error('The selected columns were not found in the file.')
-        raise KeyError('The selected columns were not found in the file.') from k_err
+        logger.error("The selected columns were not found in the file.")
+        raise KeyError("The selected columns were not found in the file.") from k_err
     except ValueError as v_err:
-        logger.error('There was a problem reading the file.')
-        raise ValueError('There was a problem reading the file.') from v_err
+        logger.error("There was a problem reading the file.")
+        raise ValueError("There was a problem reading the file.") from v_err
     except Exception as e:
         logger.error("Error occurred while trying to import data from file: %s", e)
         raise Exception from e
     else:
-        if 'Data_Value' in places.columns: # Only used for raw data cleaning
+        if "Data_Value" in places.columns: # Only used for raw data cleaning
             # Drop row with null data_value
             places = places.drop(places.loc[places.Data_Value.isna()].index, axis=0)
         logger.info("Data file successfully imported, valid row count is %i.", places.shape[0])
@@ -123,10 +123,10 @@ def pivot_measures (places_df : pd.DataFrame) -> pd.DataFrame:
     places_pivot = pd.DataFrame()
     try:
         places_pivot = pd.pivot(places_df,
-                                index = ['StateDesc', 'CountyName', 'CountyFIPS',
-                                        'LocationID', 'TotalPopulation', 'Geolocation'],
-                                columns = 'MeasureId',
-                                values = 'Data_Value').reset_index()
+                                index = ["StateDesc", "CountyName", "CountyFIPS",
+                                        "LocationID", "TotalPopulation", "Geolocation"],
+                                columns = "MeasureId",
+                                values = "Data_Value").reset_index()
     except TypeError as t_err:
         logger.error("Column Data_Value must be numeric.")
         raise TypeError("Column Data_Value must be numeric.") from t_err

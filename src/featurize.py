@@ -109,7 +109,7 @@ def scale_values(engine_string : str,
         for col in columns: 
             min_value = places_pivot[col].min()
             max_value = places_pivot[col].max()
-            places_pivot['scaled_' + col] = (places_pivot[col]-min_value) / (max_value - min_value)
+            places_pivot["scaled_" + col] = (places_pivot[col]-min_value) / (max_value - min_value)
             add_range(engine_string,
                       col,
                       min_value,
@@ -161,10 +161,10 @@ def reformat_measures(places_pivot : pd.DataFrame,
 def one_hot_encode(places_pivot : pd.DataFrame,
                    states_to_regions : typing.Dict[str, str]) -> pd.DataFrame:
     """
-    Adds 1/0 dummy columns corresponding to each state's region.
+    Adds 1/0 dummy columns corresponding to each state"s region.
 
-    Adds 'Northwest', 'Southwest', 'Northeast', 'Midwest' binary
-    columns to dataframe. 'West' is omitted to avoid perfect multicollinearity.
+    Adds "Northwest", "Southwest", "Northeast", "Midwest" binary
+    columns to dataframe. "West" is omitted to avoid perfect multicollinearity.
 
     Args:
         places_pivot (dataframe) : Pivoted dataframe of PLACES data.
@@ -178,13 +178,13 @@ def one_hot_encode(places_pivot : pd.DataFrame,
     """
 
     try:
-        places_pivot['region'] = places_pivot['StateDesc'].map(states_to_regions)
-        if sum(places_pivot['region'].isna()) > 0:
+        places_pivot["region"] = places_pivot["StateDesc"].map(states_to_regions)
+        if sum(places_pivot["region"].isna()) > 0:
             logger.warning("Unmapped state names exist.")
     except KeyError as k_err:
         logger.error("Column(s) region or StateDesc are missing from dataframe.")
         raise KeyError("Column(s) region or StateDesc are missing from dataframe.") from k_err
     else:
     # Create 1/0 encoded categorical variables for regions, dropping West
-        places_pivot = places_pivot.join(pd.get_dummies(places_pivot['region'], dtype=int).drop('West', axis=1))
+        places_pivot = places_pivot.join(pd.get_dummies(places_pivot["region"], dtype=int).drop("West", axis=1))
     return places_pivot

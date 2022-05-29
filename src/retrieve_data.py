@@ -23,9 +23,9 @@ def import_places_api(url : str,
 
     Function uses CDC's Socrata APIs to import 2019 PLACES data.
     Resulting pandas dataframe contains columns:
-    'StateDesc', 'CountyName', 'CountyFIPS', 'LocationID',
-    'TotalPopulation', 'Geolocation', 'MeasureId', 'Data_Value',
-    'Category', 'Short_Question_Text', 'Measure'.
+    "StateDesc", "CountyName", "CountyFIPS", "LocationID",
+    "TotalPopulation", "Geolocation", "MeasureId", "Data_Value",
+    "Category", "Short_Question_Text", "Measure".
 
     Args:
         socrata_dataset_identifier (str) : Keyword phrase corresponding to PLACES schema.
@@ -59,7 +59,7 @@ def import_places_api(url : str,
                 Short_Question_Text,
                 Measure
             where
-                year = '2019'
+                year = "2019"
                 and data_value is not null
             limit 3000000
             """
@@ -100,7 +100,7 @@ def import_places_api(url : str,
 
 def upload_file(input_df : pd.DataFrame,
                 save_file_path : str,
-                sep : str = ',') -> None:
+                sep : str = ",") -> None:
     """
     Uploads pandas dataframe to file path.
 
@@ -108,7 +108,7 @@ def upload_file(input_df : pd.DataFrame,
         input_df (pandas dataframe) : Dataframe to be uploaded as csv.
         save_file_path (str) : Url to save file, such as s3 bucket address.
         sep (str) : Delimeter character.
-                    Defaults to ','.
+                    Defaults to ",".
 
     Returns:
         None; uploads file to location
@@ -119,7 +119,7 @@ def upload_file(input_df : pd.DataFrame,
         input_df.to_csv(save_file_path, sep=sep)
     except boto3.exceptions.NoCredentialsError as c_err:  # type: ignore
         logger.error(
-            'Please provide credentials AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY env variables.'
+            "Please provide credentials AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY env variables."
             )
         raise boto3.exceptions.NoCredentialsError(  # type: ignore
             "Missing AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY credentials.") from c_err
@@ -130,4 +130,4 @@ def upload_file(input_df : pd.DataFrame,
             logger.error("Exiting due to error: %s", e)
             raise Exception from e
     else:
-        logger.info('PLACES data uploaded to %s.', save_file_path)
+        logger.info("PLACES data uploaded to %s.", save_file_path)

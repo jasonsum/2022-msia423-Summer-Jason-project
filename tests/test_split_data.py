@@ -31,10 +31,10 @@ df_in_values = [[ 0.272     ,  0.254     ,  0.182     ,  0.386     ,  0.737     
          0.361     ,  0.032     ,  0.366     ,  0.038     ,  0.        ,
          0.        ,  1.        ,  0.        ,  0.09214889]]
 df_in_index = [15510, 19119, 10311, 13791]
-df_in_columns = ['ACCESS2', 'ARTHRITIS', 'BINGE', 'BPHIGH', 'BPMED', 'CANCER', 'CASTHMA',
-       'CHD', 'CHECKUP', 'CHOLSCREEN', 'COPD', 'CSMOKING', 'DEPRESSION',
-       'DIABETES', 'GHLTH', 'HIGHCHOL', 'KIDNEY', 'OBESITY', 'STROKE',
-       'Midwest', 'Northeast', 'South', 'Southwest', 'scaled_TotalPopulation']
+df_in_columns = ["ACCESS2", "ARTHRITIS", "BINGE", "BPHIGH", "BPMED", "CANCER", "CASTHMA",
+       "CHD", "CHECKUP", "CHOLSCREEN", "COPD", "CSMOKING", "DEPRESSION",
+       "DIABETES", "GHLTH", "HIGHCHOL", "KIDNEY", "OBESITY", "STROKE",
+       "Midwest", "Northeast", "South", "Southwest", "scaled_TotalPopulation"]
 df_in = pd.DataFrame(df_in_values, index=df_in_index, columns=df_in_columns)
 
 def test_split_data():
@@ -65,11 +65,11 @@ def test_split_data():
          0.263     ,  0.033     ,  0.394     ,  0.039     ,  0.        ,
          0.        ,  1.        ,  0.        ,  0.05842871,  0        ]],
             index = [13791, 15510, 10311, 19119],
-            columns = ['ACCESS2', 'ARTHRITIS', 'BINGE', 'BPHIGH', 'BPMED', 'CANCER', 'CASTHMA',
-                       'CHD', 'CHECKUP', 'CHOLSCREEN', 'COPD', 'CSMOKING', 'DEPRESSION',
-                       'DIABETES', 'GHLTH', 'HIGHCHOL', 'KIDNEY', 'OBESITY', 'STROKE',
-                       'Midwest', 'Northeast', 'South', 'Southwest', 'scaled_TotalPopulation',
-                       'training'])
+            columns = ["ACCESS2", "ARTHRITIS", "BINGE", "BPHIGH", "BPMED", "CANCER", "CASTHMA",
+                       "CHD", "CHECKUP", "CHOLSCREEN", "COPD", "CSMOKING", "DEPRESSION",
+                       "DIABETES", "GHLTH", "HIGHCHOL", "KIDNEY", "OBESITY", "STROKE",
+                       "Midwest", "Northeast", "South", "Southwest", "scaled_TotalPopulation",
+                       "training"])
 
     # Create test output
     df_test = split_data(df_in, test_size=0.25,random_state=42)

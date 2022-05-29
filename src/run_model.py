@@ -125,7 +125,7 @@ def fit_model(places_df: pd.DataFrame,
         # package all parameters into dict
         # parameter table requires all lowercase
         params = dict(zip([x.lower() for x in feature_nms], coeffs))
-        params['intercept'] = intercept
+        params["intercept"] = intercept
         logger.info("Model coefficients successfully captured.")
 
     return params, model
@@ -151,7 +151,7 @@ def dump_model(trained_model : LinearRegression,
         raise FileNotFoundError("Please provide a valid file path.") from f_err
     except boto3.exceptions.NoCredentialsError as c_err:  # type: ignore
         logger.error(
-            'Please provide credentials AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY env variables.'
+            "Please provide credentials AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY env variables."
             )
         raise boto3.exceptions.NoCredentialsError(  # type: ignore
             "Missing AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY credentials") from c_err

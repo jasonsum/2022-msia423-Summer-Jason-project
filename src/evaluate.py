@@ -89,7 +89,7 @@ def visualize_performance(test_df : pd.DataFrame,
     if rmse:
         rmse_txt = str(round(capture_rmse(test_df, true_col, pred_col, comp_prop),5))
     else:
-        rmse_txt = ''
+        rmse_txt = ""
     true = test_df[true_col].copy()
     preds = test_df[pred_col].copy()
     if comp_prop: # convert both to probability
@@ -100,7 +100,7 @@ def visualize_performance(test_df : pd.DataFrame,
         plt.scatter(true,
                     preds,
                     alpha = 0.2,
-                    edgecolors='darkblue',
+                    edgecolors="darkblue",
                     **kwargs)
         plt.title("Predicted vs. Actual Responses", fontsize=22)
         plt.xlabel("Actual Responses", fontsize=18)
@@ -116,7 +116,7 @@ def visualize_performance(test_df : pd.DataFrame,
         raise FileNotFoundError("A valid file path and name must be provided.") from f_err
     except boto3.exceptions.NoCredentialsError as c_err:  # type: ignore
         logger.error(
-            'Please provide credentials AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY env variables.'
+            "Please provide credentials AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY env variables."
             )
         raise boto3.exceptions.NoCredentialsError(  # type: ignore
             "Missing AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY credentials") from c_err
