@@ -1,11 +1,11 @@
 S3_BUCKET = s3://2022-msia423-summer-jason/data/
 LOCAL_DATA_PATH = data/clean/
-LOCAL_MODEL_PATH = model/
+LOCAL_MODEL_PATH = models/
 MODEL_CONFIG = config/model-config.yaml
 
-.PHONY: image database add_measures raw clean features train_test model score performance test-image unit-tests remove-local make-dirs
+.PHONY: image database add_measures raw clean features train_test model score performance test-image unit-tests remove-local dirs
 
-make-dirs:
+dirs:
 	mkdir -p ${LOCAL_DATA_PATH}
 	mkdir -p ${LOCAL_MODEL_PATH}
 
@@ -47,6 +47,8 @@ ${LOCAL_MODEL_PATH}performance.png: ${LOCAL_DATA_PATH}score.csv
 	docker run --mount type=bind,source="$(shell pwd)",target=/app/ final-project evaluate --config=${MODEL_CONFIG} --input=${LOCAL_DATA_PATH}score.csv --output=${LOCAL_MODEL_PATH}performance.png
 
 performance: ${LOCAL_MODEL_PATH}performance.png
+
+pipeline: dirs database add_measures raw clean features train_test model score performance
 
 test-image:
 	docker build -f dockerfiles/Dockerfile.test -t final-project-test .
