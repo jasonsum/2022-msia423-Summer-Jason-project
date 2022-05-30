@@ -47,10 +47,15 @@ class Features(Base):
     record_time = sql.Column(sql.DateTime, unique=False, nullable=True, default=func.now())
 
     def __repr__(self):
-        return f"<Features: access2: {self.access2}, arthritis: {self.arthritis}, binge: {self.binge}, bphigh: {self.bphigh}, bpmed: {self.bpmed}, cancer: {self.cancer}, \
-                casthma: {self.casthma}, chd: {self.chd}, checkup: {self.checkup}, cholscreen: {self.cholscreen}, copd: {self.copd}, csmoking: {self.csmoking}, depression: {self.depression}, \
-                diabetes: {self.diabetes}, highchol: {self.highchol}, kidney: {self.kidney}, obesity: {self.obesity}, stroke: {self.stroke}, scaled_TotalPopulation: {self.scaled_totalpopulation}, \
-                midwest: {self.midwest}, northeast: {self.northeast}, south: {self.south}, southwest: {self.southwest}>"
+        return f"<Features: access2: {self.access2}, arthritis: {self.arthritis},\
+                 binge: {self.binge}, bphigh: {self.bphigh}, bpmed: {self.bpmed},\
+                 cancer: {self.cancer}, casthma: {self.casthma}, chd: {self.chd},\
+                 checkup: {self.checkup}, cholscreen: {self.cholscreen}, copd: {self.copd},\
+                 csmoking: {self.csmoking}, depression: {self.depression},\
+                 diabetes: {self.diabetes}, highchol: {self.highchol}, kidney: {self.kidney},\
+                 obesity: {self.obesity}, stroke: {self.stroke},\
+                 scaled_TotalPopulation: {self.scaled_totalpopulation}, midwest: {self.midwest},\
+                 northeast: {self.northeast}, south: {self.south}, southwest: {self.southwest}>"
 
 class Parameters(Base):
     """Creates a table of regression parameters for predicting log-odds of GHLTH."""
@@ -84,10 +89,15 @@ class Parameters(Base):
     intercept = sql.Column(sql.Float, unique=False, nullable=False)
 
     def __repr__(self):
-        return f"<Parameters: access2: {self.access2}, arthritis: {self.arthritis}, binge: {self.binge}, bphigh: {self.bphigh}, bpmed: {self.bpmed}, cancer: {self.cancer}, \
-                casthma: {self.casthma}, chd: {self.chd}, checkup: {self.checkup}, cholscreen: {self.cholscreen}, copd: {self.copd}, csmoking: {self.csmoking}, depression: {self.depression}, \
-                diabetes: {self.diabetes}, highchol: {self.highchol}, kidney: {self.kidney}, obesity: {self.obesity}, stroke: {self.stroke}, scaled_TotalPopulation: {self.scaled_totalpopulation}, \
-                midwest: {self.midwest}, northeast: {self.northeast}, south: {self.south}, southwest: {self.southwest}, \
+        return f"<Parameters: access2: {self.access2}, arthritis: {self.arthritis},\
+                binge: {self.binge}, bphigh: {self.bphigh}, bpmed: {self.bpmed},\
+                cancer: {self.cancer}, casthma: {self.casthma}, chd: {self.chd},\
+                checkup: {self.checkup}, cholscreen: {self.cholscreen}, copd: {self.copd},\
+                csmoking: {self.csmoking}, depression: {self.depression},\
+                diabetes: {self.diabetes}, highchol: {self.highchol}, kidney: {self.kidney},\
+                obesity: {self.obesity}, stroke: {self.stroke},\
+                scaled_TotalPopulation: {self.scaled_totalpopulation}, midwest: {self.midwest},\
+                northeast: {self.northeast}, south: {self.south}, southwest: {self.southwest},\
                 intercept: {self.intercept}>"
 
 class scalerRanges(Base):
@@ -114,8 +124,8 @@ class Measures(Base):
     short_question_text = sql.Column(sql.String(100), unique=False, nullable=False)
 
     def __repr__(self):
-        return f"<Measures: category: {self.category}, measureid: {self.measureid}, short_question_text: {self.short_question_text}>"
-
+        return f"<Measures: category: {self.category}, measureid: {self.measureid},\
+                short_question_text: {self.short_question_text}>"
 
 def create_db(engine_string : str) -> None:
     """
@@ -143,4 +153,3 @@ def create_db(engine_string : str) -> None:
     # create tables
     Base.metadata.create_all(engine)
     logger.info("Database created.")
-

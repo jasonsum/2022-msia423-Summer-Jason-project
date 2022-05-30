@@ -6,7 +6,7 @@ import logging
 import typing
 import pickle
 
-import boto3
+import botocore
 import pandas as pd
 from sklearn.linear_model import LinearRegression
 
@@ -30,11 +30,11 @@ def import_model(save_path_name : str) -> LinearRegression:
     except FileNotFoundError as f_err:
         logger.error("A valid file path and name must be provided.")
         raise FileNotFoundError("A valid file path and name must be provided.") from f_err
-    except boto3.exceptions.NoCredentialsError as c_err:  # type: ignore
+    except botocore.exceptions.NoCredentialsError as c_err:  # type: ignore
         logger.error(
             "Please provide credentials AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY env variables."
             )
-        raise boto3.exceptions.NoCredentialsError(  # type: ignore
+        raise botocore.exceptions.NoCredentialsError(  # type: ignore
             "Missing AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY credentials") from c_err
     except Exception as e:
         logger.error("Error occurred while trying to import file: %s", e)
@@ -44,7 +44,7 @@ def import_model(save_path_name : str) -> LinearRegression:
         return trained_model
 
 def pred_responses(trained_model : LinearRegression,
-                   test_df : pd.DataFrame, 
+                   test_df : pd.DataFrame,
                    features : typing.List[str]) -> pd.DataFrame:
 
     """

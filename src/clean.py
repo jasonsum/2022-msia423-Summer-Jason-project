@@ -5,13 +5,9 @@ in preparation of featurization and modeling.
 
 import typing
 import logging
-import typing
 
 import pandas as pd
-import numpy as np
-import boto3
-
-from src.models import scalerRanges
+import botocore
 
 logger = logging.getLogger(__name__)
 
@@ -43,13 +39,13 @@ def import_file(file_path : str,
     try:
         places : pd.DataFrame = pd.read_csv(file_path,
                                             usecols = columns, #type:ignore
-                                            sep=sep,
+                                            sep = sep,
                                             **kwargs)
-    except boto3.exceptions.NoCredentialsError as c_err:  # type: ignore
+    except botocore.exceptions.NoCredentialsError as c_err:  # type: ignore
         logger.error(
             "Please provide credentials AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY env variables."
             )
-        raise boto3.exceptions.NoCredentialsError(  # type: ignore
+        raise botocore.exceptions.NoCredentialsError(  # type: ignore
             "Missing AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY credentials.") from c_err
     except FileNotFoundError as f_err:
         logger.error("Please provide a valid file location to import data.")
@@ -109,7 +105,7 @@ def pivot_measures (places_df : pd.DataFrame) -> pd.DataFrame:
     Transposes dataframe of PLACES data from row-wise measures to column-wise.
 
     Function produces a dataframe of one row per county with columns containing
-    the value of measures. 
+    the value of measures.
 
     Args:
         places_df (dataframe) : Dataframe from PLACES csv import.
@@ -119,7 +115,7 @@ def pivot_measures (places_df : pd.DataFrame) -> pd.DataFrame:
         pandas dataframe: PLACES dataframe pivoted to one row per county
 
     """
-    
+
     places_pivot = pd.DataFrame()
     try:
         places_pivot = pd.pivot(places_df,
@@ -185,7 +181,7 @@ def drop_invalid_measures(places_pivot : pd.DataFrame,
     """
     Removes invalid PLACES measurement columns.
 
-    Some measured are not consistently obtained during the CDC survey. 
+    Some measured are not consistently obtained during the CDC survey.
     Others introduce multicollinearity among predictors.
 
     Args:
@@ -210,7 +206,7 @@ def drop_invalid_measures(places_pivot : pd.DataFrame,
     except AttributeError as a_err:
         logger.error("First argument must be a dataframe.")
         raise AttributeError("First argument must be a dataframe.") from a_err
-    
+
     return places_pivot
 
 def prep_data(places_df : pd.DataFrame,

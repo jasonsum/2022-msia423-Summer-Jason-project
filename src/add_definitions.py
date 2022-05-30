@@ -49,10 +49,11 @@ def create_references(engine : sql.engine.base.Engine):
     ghlth = Measures(category="health status", measureid="ghlth", short_question_text="general health")
     cholscreen = Measures(category="prevention", measureid="cholscreen", short_question_text="cholesterol screening")
     access2 = Measures(category="prevention", measureid="access2", short_question_text="health insurance")
-    colon_screen = Measures(category="prevention", measureid="colon_screen", short_question_text="colorectal cancer screening")
+    colon_screen = Measures(category="prevention", measureid="colon_screen",
+                            short_question_text="colorectal cancer screening")
     bpmed = Measures(category="prevention", measureid="bpmed", short_question_text="taking bp medication")
     checkup = Measures(category="prevention", measureid="checkup", short_question_text="annual checkup")
-    
+
     session.query(Measures).delete()
 
     session.add_all([
@@ -105,4 +106,3 @@ def add_references(engine_string : str) -> None:
 
     # add reference table
     create_references(engine)
-

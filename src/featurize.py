@@ -4,11 +4,9 @@ Module uses clean data, and conducts minor featurization in preparation of model
 
 import typing
 import logging
-import typing
 
 import pandas as pd
 import numpy as np
-from sodapy import Socrata
 import sqlalchemy as sql
 import sqlalchemy.exc
 import sqlalchemy.orm
@@ -20,8 +18,8 @@ logger = logging.getLogger(__name__)
 
 def create_range(engine : sql.engine.base.Engine,
                  valuename : str,
-                 max : float,
-                 min : float) -> None:
+                 max_val : float,
+                 min_val : float) -> None:
     """
     Adds min-max values of features for scaling.
 
@@ -43,16 +41,16 @@ def create_range(engine : sql.engine.base.Engine,
     session : sqlalchemy.orm.session.Session = Session()
 
     sc_range = scalerRanges(valuename = valuename,
-                            max_value = max,
-                            min_value = min)
+                            max_value = max_val,
+                            min_value = min_val)
     session.add(sc_range)
     session.commit()
     logger.info("Scaling range added.")
 
 def add_range(engine_string : str,
               valuename : str,
-              max : float,
-              min : float) -> None:
+              max_val : float,
+              min_val : float) -> None:
     """
     Populates rangeScaler table with field
     min and max value(s).
@@ -80,8 +78,8 @@ def add_range(engine_string : str,
     # add range row to table
     create_range(engine,
                  valuename,
-                 max,
-                 min)
+                 max_val,
+                 min_val)
 
 def scale_values(engine_string : str,
                  places_pivot : pd.DataFrame,
@@ -102,11 +100,11 @@ def scale_values(engine_string : str,
         pandas dataframe: PLACES dataframe with reformatted column measures
 
     """
-    
+
     if isinstance(columns, str): # Create iterable of columns if only one passed
         columns = [columns]
-    try: 
-        for col in columns: 
+    try:
+        for col in columns:
             min_value = places_pivot[col].min()
             max_value = places_pivot[col].max()
             places_pivot["scaled_" + col] = (places_pivot[col]-min_value) / (max_value - min_value)
@@ -130,7 +128,7 @@ def reformat_measures(places_pivot : pd.DataFrame,
     Conducts minor data transformations to measures of places_pivot.
 
     Transforms integer proportions with floats [0,1] representing decimal proportions.
-    Creates a log-odds column to be used in regression of a proportion. 
+    Creates a log-odds column to be used in regression of a proportion.
 
     Args:
         places_pivot (dataframe) : Pivoted dataframe of PLACES data.

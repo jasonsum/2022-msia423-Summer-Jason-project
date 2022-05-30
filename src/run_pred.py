@@ -3,8 +3,6 @@ Ingests user input as features into table, enables querying of feature, paramete
 and reference tables and renders query results and prediction for PLACES app.
 """
 
-# mypy: plugins = sqlmypy, plugins = flasksqlamypy
-import argparse
 import logging
 import logging.config
 import typing
@@ -15,9 +13,8 @@ import sqlalchemy
 import sqlalchemy.orm
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import desc
 
-from src.models import Features, Parameters, Measures, scalerRanges
+from src.models import Features, Parameters, Measures
 
 logger = logging.getLogger(__name__)
 
@@ -25,13 +22,14 @@ Base: typing.Any = declarative_base()
 
 
 class PredManager:
-    """Creates a SQLAlchemy connection to the Features and Parameter tables.
+    """
+    Creates a SQLAlchemy connection to the Features and Parameter tables.
 
     Args:
-        app (:obj:`flask.app.Flask`): Flask app object for when connecting from
-            within a Flask app. Optional.
-        engine_string (str): SQLAlchemy engine string specifying which database
-            to write to. Follows the format
+        app (obj:flask.app.Flask) : Flask app object for when connecting from
+                                    within a Flask app. Optional.
+        engine_string (str) : SQLAlchemy engine string specifying which database
+                              to write to. Follows the format.
     """
     def __init__(self, app: typing.Optional[flask.app.Flask] = None,
                  engine_string: typing.Optional[str] = None):
@@ -47,20 +45,26 @@ class PredManager:
                 "Need either an engine string or a Flask app to initialize")
 
     def close(self) -> None:
-        """Closes SQLAlchemy session
+        """
+        Closes SQLAlchemy session
 
-        Returns: None
+        Returns:
+            None
 
         """
         self.session.close()
-          
+
     def get_metrics(self,
-                    row_limit : int):
-        
-        """Queries database for homepage measurements of app.
+                    row_limit : int) -> typing.Tuple:
+
+        """
+        Queries database for homepage measurements of app.
 
         Args:
-            row_limit (str): Number of rows to return across all queries
+            row_limit (int): Number of rows to return across all queries
+        Returns:
+            Tuple of query results
+
         """
 
         session = self.session
@@ -70,10 +74,10 @@ class PredManager:
             row_limit).all()
         hlth_prevention = session.query(Measures).filter_by(category="prevention").limit(
             row_limit).all()
-        
+
         return  hlth_outcomes, hlth_behaviors, hlth_prevention
 
-    def generate_pred(self, 
+    def generate_pred(self,
                   access2: float,
                   arthritis: float,
                   binge: float,
@@ -98,7 +102,8 @@ class PredManager:
                   south: int,
                   southwest: int
                   ) -> float:
-        """Seeds an existing database with new user feature input values.
+        """
+        Seeds an existing database with new user feature input values.
 
         See Measures table or reference information for more information about each measure.
 
@@ -122,43 +127,43 @@ class PredManager:
             obesity (float) : Proportion of county population recorded with indicated measure.
             stroke (float) : Proportion of county population recorded with indicated measure.
             scaled_TotalPopulation (float) : Scaled value between 0 and 1 representing county population.
-            midwest: Binary indicator of county in corresponding region. 1 indicates True.
-            northeast: Binary indicator of county in corresponding region. 1 indicates True.
-            south: Binary indicator of county in corresponding region. 1 indicates True.
-            southwest: Binary indicator of county in corresponding region. 1 indicates True.
+            midwest (int) : Binary indicator of county in corresponding region. 1 indicates True.
+            northeast (int) : Binary indicator of county in corresponding region. 1 indicates True.
+            south (int) : Binary indicator of county in corresponding region. 1 indicates True.
+            southwest (int) : Binary indicator of county in corresponding region. 1 indicates True.
 
         Returns:
-            None
+            prediction result
         """
 
         session = self.session
         coeffs = session.query(Parameters).first()
         # Generate prediction
-        pred = (coeffs.access2 * access2 + 
-                coeffs.arthritis * arthritis + 
-                coeffs.binge * binge + 
-                coeffs.bphigh * bphigh + 
-                coeffs.bpmed * bpmed + 
-                coeffs.cancer * cancer + 
-                coeffs.casthma * casthma + 
-                coeffs.chd * chd + 
-                coeffs.checkup * checkup + 
-                coeffs.cholscreen * cholscreen + 
-                coeffs.copd * copd + 
-                coeffs.csmoking * csmoking + 
-                coeffs.depression * depression + 
-                coeffs.diabetes * diabetes + 
-                coeffs.highchol * highchol + 
-                coeffs.kidney * kidney + 
-                coeffs.obesity * obesity + 
-                coeffs.stroke * stroke + 
-                coeffs.scaled_totalpopulation * scaled_totalpopulation + 
-                coeffs.midwest * midwest + 
-                coeffs.northeast * northeast + 
-                coeffs.south * south + 
-                coeffs.southwest * southwest + 
-                coeffs.intercept) 
-        
+        pred = (coeffs.access2 * access2 +
+                coeffs.arthritis * arthritis +
+                coeffs.binge * binge +
+                coeffs.bphigh * bphigh +
+                coeffs.bpmed * bpmed +
+                coeffs.cancer * cancer +
+                coeffs.casthma * casthma +
+                coeffs.chd * chd +
+                coeffs.checkup * checkup +
+                coeffs.cholscreen * cholscreen +
+                coeffs.copd * copd +
+                coeffs.csmoking * csmoking +
+                coeffs.depression * depression +
+                coeffs.diabetes * diabetes +
+                coeffs.highchol * highchol +
+                coeffs.kidney * kidney +
+                coeffs.obesity * obesity +
+                coeffs.stroke * stroke +
+                coeffs.scaled_totalpopulation * scaled_totalpopulation +
+                coeffs.midwest * midwest +
+                coeffs.northeast * northeast +
+                coeffs.south * south +
+                coeffs.southwest * southwest +
+                coeffs.intercept)
+
         # Capture probability from log-odds
         # prob = odds / (1 + odds)
         prob = math.exp(pred) / (1 + math.exp(pred))
@@ -188,19 +193,19 @@ class PredManager:
                          south=south,
                          southwest=southwest,
                          prediction=prob)
-        
+
         session.add(input)
         logger.info("New prediction generated: %.2f", prob)
         session.commit()
         return prob
-    
+
     def remove_inputs(self) -> None:
         """
-        Deletes all rows from Features table
+        Deletes all rows from Features table.
 
         Args:
             None
-        
+
         Returns:
             None
         """

@@ -3,7 +3,6 @@ Module splits training and testing datasets.
 """
 
 import logging
-import typing
 
 import pandas as pd
 import sklearn.model_selection
@@ -44,11 +43,11 @@ def split_data(places_df: pd.DataFrame,
             logger.info("Test data has %i rows", len(test))
             test["training"] = 0
             combined_df = pd.concat([train, test], axis=0)  # type: ignore
-        except TypeError:
+        except TypeError as t_err:
             logger.error("test_size must be a float and random_state an integer.")
-            raise TypeError("test_size must be a float and random_state an integer.")
-        except ValueError:
+            raise TypeError("test_size must be a float and random_state an integer.") from t_err
+        except ValueError as v_err:
             logger.error("Value of test_size must be between 0 and 1.")
-            raise ValueError("Value of test_size must be between 0 and 1.")
+            raise ValueError("Value of test_size must be between 0 and 1.") from v_err
 
     return combined_df  # type: ignore

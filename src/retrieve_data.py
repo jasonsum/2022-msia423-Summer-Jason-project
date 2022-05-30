@@ -7,7 +7,7 @@ import time
 
 import requests
 import pandas as pd
-import boto3
+import botocore
 from sodapy import Socrata
 
 logger = logging.getLogger(__name__)
@@ -44,7 +44,7 @@ def import_places_api(url : str,
                              app_token,
                              socrata_username,
                              socrata_password)
-            
+
             socrata_query : str = """
             select 
                 StateDesc,
@@ -94,7 +94,7 @@ def import_places_api(url : str,
             raise Exception from e
         else:
             break
-    
+
     return data_df
 
 
@@ -117,17 +117,17 @@ def upload_file(input_df : pd.DataFrame,
 
     try:
         input_df.to_csv(save_file_path, sep=sep)
-    except boto3.exceptions.NoCredentialsError as c_err:  # type: ignore
+    except botocore.exceptions.NoCredentialsError as c_err:  # type: ignore
         logger.error(
             "Please provide credentials AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY env variables."
             )
-        raise boto3.exceptions.NoCredentialsError(  # type: ignore
+        raise botocore.exceptions.NoCredentialsError(  # type: ignore
             "Missing AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY credentials.") from c_err
     except FileNotFoundError as f_err:
         logger.error("Please provide a valid file location to persist data.")
         raise FileNotFoundError("Please provide a valid file location to persist data.") from f_err
     except Exception as e:
-            logger.error("Exiting due to error: %s", e)
-            raise Exception from e
+        logger.error("Exiting due to error: %s", e)
+        raise Exception from e
     else:
         logger.info("PLACES data uploaded to %s.", save_file_path)

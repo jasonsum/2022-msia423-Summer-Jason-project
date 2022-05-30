@@ -5,7 +5,7 @@ Module evaluates test set predictions.
 import logging
 
 import numpy as np
-import boto3
+import botocore
 import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.metrics import mean_squared_error
@@ -24,7 +24,7 @@ def capture_rmse(test_df : pd.DataFrame,
                                      Dataframe must contain true_col and pred_col as columns.
         true_col (str) : Dataframe column name containing true response values.
         pred_col (str) : Dataframe column name containing predicted response values.
-        comp_bool (bool) : If True, log-odds predictions and true values will be 
+        comp_bool (bool) : If True, log-odds predictions and true values will be
                            converted to probabilities before RMSE calculated.
 
     Returns:
@@ -79,7 +79,7 @@ def visualize_performance(test_df : pd.DataFrame,
                          Default to "GHLTH".
         pred_col (str) : Dataframe column name containing predicted response values.
                          Defaults to "prediction".
-        comp_bool (bool) : If True, log-odds predictions and true values will be 
+        comp_bool (bool) : If True, log-odds predictions and true values will be
                            converted to probabilities before RMSE calculated.
 
     Returns:
@@ -114,11 +114,11 @@ def visualize_performance(test_df : pd.DataFrame,
     except FileNotFoundError as f_err:
         logger.error("A valid file path and name must be provided.")
         raise FileNotFoundError("A valid file path and name must be provided.") from f_err
-    except boto3.exceptions.NoCredentialsError as c_err:  # type: ignore
+    except botocore.exceptions.NoCredentialsError as c_err:  # type: ignore
         logger.error(
             "Please provide credentials AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY env variables."
             )
-        raise boto3.exceptions.NoCredentialsError(  # type: ignore
+        raise botocore.exceptions.NoCredentialsError(  # type: ignore
             "Missing AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY credentials") from c_err
     except Exception as e:
         logger.error("Error occurred while trying to generate plot.")

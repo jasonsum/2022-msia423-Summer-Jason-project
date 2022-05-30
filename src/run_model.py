@@ -6,7 +6,7 @@ import typing
 import logging
 import pickle
 
-import boto3
+import botocore
 import pandas as pd
 import numpy as np
 from sklearn.linear_model import LinearRegression
@@ -91,7 +91,7 @@ def fit_model(places_df: pd.DataFrame,
                                  Function uses out of the box scikit-learn LinearRegression.
         features (list[str]) : Column names in dataframe to be used as feature set.
         response (str) : Column name in dataframe to be used as target variable.
-        kwargs (dict) : Additional parameters of sklearn.linear_model.LinearRegression.  
+        kwargs (dict) : Additional parameters of sklearn.linear_model.LinearRegression.
 
     Returns:
         Dict of coefficient name : values
@@ -103,7 +103,7 @@ def fit_model(places_df: pd.DataFrame,
         method=""
     logger.info("%s model training...", method)
     try:
-        model = LinearRegression(**kwargs).fit(places_df[features], 
+        model = LinearRegression(**kwargs).fit(places_df[features],
                                                places_df[response])
     except TypeError as t_err:
         logger.error("Params and columns must be valid for sklearn.linear_model.LinearRegression")
@@ -149,15 +149,14 @@ def dump_model(trained_model : LinearRegression,
     except FileNotFoundError as f_err:
         logger.error("Please provide a valid file path.")
         raise FileNotFoundError("Please provide a valid file path.") from f_err
-    except boto3.exceptions.NoCredentialsError as c_err:  # type: ignore
+    except botocore.exceptions.NoCredentialsError as c_err:  # type: ignore
         logger.error(
             "Please provide credentials AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY env variables."
             )
-        raise boto3.exceptions.NoCredentialsError(  # type: ignore
+        raise botocore.exceptions.NoCredentialsError(  # type: ignore
             "Missing AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY credentials") from c_err
     except Exception as e:
         logger.error("Error occurred while trying to save file: %s", e)
         raise e
     else:
         logger.info("Model successfully saved.")
-

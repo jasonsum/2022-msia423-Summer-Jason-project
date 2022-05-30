@@ -4,15 +4,15 @@ Executes flask app procedures for rendering pages and generating predictions.
 
 import logging
 import logging.config
+
 import sqlite3
 import traceback
-
 import sqlalchemy.exc
 from flask import Flask, render_template, request
 
 # For setting up the Flask-SQLAlchemy database session
 from src.models import scalerRanges
-from src.run_pred import PredManager 
+from src.run_pred import PredManager
 
 # Initialize the Flask application
 app = Flask(__name__, template_folder="app/templates",
@@ -77,7 +77,7 @@ def index():
     try:
         hlth_outcomes, hlth_behaviors, hlth_prevention = pred_manager.get_metrics(app.config["MAX_ROWS_SHOW"])
         logger.debug("Index page accessed")
-        return render_template("index.html", 
+        return render_template("index.html",
                                hlth_outcomes=hlth_outcomes,
                                hlth_behaviors=hlth_behaviors,
                                hlth_prevention=hlth_prevention,
@@ -113,7 +113,7 @@ def add_entry():
     # west is used as omitted dummy variable
     regions = {"midwest":0 ,
                "northeast":0,
-               "south":0, 
+               "south":0,
                "southwest":0}
     for k in regions.keys():
         if k == request.form["region"]:
@@ -123,7 +123,7 @@ def add_entry():
 
     # Retrieve measurements again for display
     hlth_outcomes, hlth_behaviors, hlth_prevention = pred_manager.get_metrics(app.config["MAX_ROWS_SHOW"])
-    
+
     try:
         prob = pred_manager.generate_pred(access2=float(request.form["access2"])/100,
                                             arthritis=float(request.form["arthritis"])/100,

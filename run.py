@@ -6,15 +6,15 @@ stage in the model pipeline and orchestrates their execution.
 import argparse
 import logging
 import logging.config
-import yaml
 import sys
 
+import yaml
 import requests
-import boto3
+import botocore
 import sqlalchemy.exc
 
 # Configurations
-import config.config as config
+from config import config
 
 # Modules
 from src.models import create_db
@@ -30,17 +30,6 @@ from src.evaluate import visualize_performance
 # References
 from data.reference.state_region_mapping import states_region_mapping
 
-"""
-Expected environment variables:
-API:
-SOCRATA_TOKEN, SOCRATA_USERNAME, SOCRATA_PASSWORD
-Database:
-SQLALCHEMY_DATABASE_URI
-S3:
-AWS_ACCESS_KEY_ID
-AWS_SECRET_ACCESS_KEY
-"""
-
 logging.config.fileConfig("config/logging/local.conf")
 logger = logging.getLogger("model_pipeline")
 
@@ -51,7 +40,7 @@ if __name__ == "__main__":
         description="Build and populate database, acquire data, clean, featurize\
                      train model, score model, and/or evaluate model.")
 
-    parser.add_argument("step", help="Which step to run", choices=["create_db", "add_measures", "ingest", "clean", 
+    parser.add_argument("step", help="Which step to run", choices=["create_db", "add_measures", "ingest", "clean",
                                                                    "featurize", "train", "score", "evaluate"])
     parser.add_argument("--config", default="config/model-config.yaml", help="Path to configuration file")
     parser.add_argument("--input", "-i", default=None, help="Path to retrieve input file")
@@ -66,7 +55,7 @@ if __name__ == "__main__":
     except FileNotFoundError:
         logger.error("Please provide a valid configuration file; exiting.")
         sys.exit(1)
-    
+
     # Create database
     if args.step == "create_db":
         if config.SQLALCHEMY_DATABASE_URI is None:
@@ -77,7 +66,7 @@ if __name__ == "__main__":
         except sqlalchemy.exc.OperationalError:
             logger.error("A connection error has occurred. Unable to create database.")
             sys.exit(1)
-    
+
     # Population measurement definitions
     elif args.step == "add_measures":
         if config.SQLALCHEMY_DATABASE_URI is None:
@@ -91,7 +80,7 @@ if __name__ == "__main__":
         except sqlalchemy.exc.IntegrityError:
             logger.error("A primary key violation has occurred. Please ensure table is empty.")
             sys.exit(1)
-    
+
     # Get raw data from API
     elif args.step == "ingest":
         if not mdl_config["ingest"]:
@@ -118,15 +107,14 @@ if __name__ == "__main__":
             except FileNotFoundError:
                 logger.error("An invalid file location has been provided; exiting.")
                 sys.exit(1)
-            except boto3.exceptions.NoCredentialsError:  # type: ignore
+            except botocore.exceptions.NoCredentialsError:  # type: ignore
                 logger.error("Missing AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY credentials; exiting.")
                 sys.exit(1)
             except Exception as e:
                 logger.error("An error has occurred while trying to upload file: %s.", e)
                 logger.error("The application is exiting.")
                 sys.exit(1)
-            
-    
+
     # Clean raw data
     elif args.step == "clean":
         # Set config
@@ -134,11 +122,11 @@ if __name__ == "__main__":
             logger.error("Configuration file is missing section for selected step; exiting.")
             sys.exit(1)
         clean_data = mdl_config["clean"]
-        
-        # Import file 
+
+        # Import file
         try:
             places_df = import_file(args.input, **clean_data["import_file"])
-        except boto3.exceptions.NoCredentialsError:  # type: ignore
+        except botocore.exceptions.NoCredentialsError:  # type: ignore
             logger.error("Missing AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY credentials; exiting.")
             sys.exit(1)
         except FileNotFoundError:
@@ -179,7 +167,7 @@ if __name__ == "__main__":
                 except FileNotFoundError:
                     logger.error("An invalid file location has been provided; exiting.")
                     sys.exit(1)
-                except boto3.exceptions.NoCredentialsError:  # type: ignore
+                except botocore.exceptions.NoCredentialsError:  # type: ignore
                     logger.error("Missing AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY credentials; exiting.")
                     sys.exit(1)
                 except AttributeError:
@@ -189,7 +177,7 @@ if __name__ == "__main__":
                     logger.error("There was a problem saving to file: %s.", e)
                     logger.error("The application is exiting.")
                     sys.exit(1)
-    
+
     # Featurize clean data
     elif args.step == "featurize":
         # Set config
@@ -201,9 +189,9 @@ if __name__ == "__main__":
         # Import file
         try:
             places_pivot = import_file(args.input, **featurize_data["import_file"])
-        except boto3.exceptions.NoCredentialsError:  # type: ignore
-                logger.error("Missing AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY credentials; exiting.")
-                sys.exit(1)
+        except botocore.exceptions.NoCredentialsError:  # type: ignore
+            logger.error("Missing AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY credentials; exiting.")
+            sys.exit(1)
         except FileNotFoundError:
             logger.error("An invalid file location has been provided; exiting.")
             sys.exit(1)
@@ -245,7 +233,8 @@ if __name__ == "__main__":
                                                     places_pivot,
                                                     **featurize_data["scale_values"])
                 except KeyError:
-                    logger.error("Please check your columns. Missing missing column(s) necessary for featurization are missing; exiting.")
+                    logger.error("Please check your columns. Missing missing column(s) necessary\
+                                  for featurization are missing; exiting.")
                     sys.exit(1)
                 except TypeError:
                     logger.error("A non-numeric column has been passed for quantitative transformation; exiting.")
@@ -257,14 +246,14 @@ if __name__ == "__main__":
                     except FileNotFoundError:
                         logger.error("An invalid file location has been provided; exiting.")
                         sys.exit(1)
-                    except boto3.exceptions.NoCredentialsError:  # type: ignore
+                    except botocore.exceptions.NoCredentialsError:  # type: ignore
                         logger.error("Missing AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY credentials; exiting.")
                         sys.exit(1)
                     except Exception as e:
                         logger.error("There was a problem saving to file: %s.", e)
                         logger.error("The application is exiting.")
                         sys.exit(1)
-    
+
     # Train model
     elif args.step == "train":
         # Set config
@@ -272,19 +261,19 @@ if __name__ == "__main__":
             logger.error("Configuration file is missing section for selected step; exiting.")
             sys.exit(1)
         train_model = mdl_config["train_model"]
-        
+
         # Capture correct RDS
         if config.SQLALCHEMY_DATABASE_URI is None:
             logger.error("Specify SQLALCHEMY_DATABASE_URI environment variable.")
             sys.exit(1)
-        
-        # Import file 
+
+        # Import file
         try:
             places_df = import_file(args.input,
                                     train_model["features"] + [train_model["response"]])
-        except boto3.exceptions.NoCredentialsError:  # type: ignore
-                logger.error("Missing AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY credentials; exiting.")
-                sys.exit(1)
+        except botocore.exceptions.NoCredentialsError:  # type: ignore
+            logger.error("Missing AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY credentials; exiting.")
+            sys.exit(1)
         except FileNotFoundError:
             logger.error("An invalid file location has been provided; exiting.")
             sys.exit(1)
@@ -323,7 +312,7 @@ if __name__ == "__main__":
                 except FileNotFoundError:
                     logger.error("An invalid file location has been provided; exiting.")
                     sys.exit(1)
-                except boto3.exceptions.NoCredentialsError:  # type: ignore
+                except botocore.exceptions.NoCredentialsError:  # type: ignore
                     logger.error("Missing AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY credentials; exiting.")
                     sys.exit(1)
                 except Exception as e:
@@ -342,7 +331,8 @@ if __name__ == "__main__":
                         add_params(config.SQLALCHEMY_DATABASE_URI, params)
                         dump_model(model,args.model)
                     except TypeError:
-                        logger.error("Passed params and columns must be valid for sklearn.linear_model.LinearRegression; exiting.")
+                        logger.error("Passed params and columns must be valid for \
+                                      sklearn.linear_model.LinearRegression; exiting.")
                         sys.exit(1)
                     except ValueError:
                         logger.error("Features should be 2D and target 1D values; exiting.")
@@ -370,12 +360,12 @@ if __name__ == "__main__":
         if not mdl_config["score"] and mdl_config["train_model"]:
             logger.error("Configuration file is missing section for selected step; exiting.")
             sys.exit(1)
-        
+
         # Import model and data file
         try:
             model = import_model(args.model)
             combined_df = import_file(args.input)
-        except boto3.exceptions.NoCredentialsError:  # type: ignore
+        except botocore.exceptions.NoCredentialsError:  # type: ignore
             logger.error("Missing AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY credentials; exiting.")
             sys.exit(1)
         except FileNotFoundError:
@@ -407,11 +397,11 @@ if __name__ == "__main__":
                 try:
                     test_df = combined_df.loc[combined_df.training == 0].copy()
                     # Generate predictions
-                    test_df = pred_responses(model, 
+                    test_df = pred_responses(model,
                                             test_df,
                                             mdl_config["train_model"]["features"])
                     upload_file(test_df, args.output) # Save test predictions dataframe
-                
+
                 except ValueError:
                     logger.error("X_test should be 2D of feature values; exiting.")
                     sys.exit(1)
@@ -421,14 +411,14 @@ if __name__ == "__main__":
                 except FileNotFoundError:
                     logger.error("An invalid file location has been provided; exiting.")
                     sys.exit(1)
-                except boto3.exceptions.NoCredentialsError:  # type: ignore
+                except botocore.exceptions.NoCredentialsError:  # type: ignore
                     logger.error("Missing AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY credentials; exiting.")
                     sys.exit(1)
                 except Exception as e:
                     logger.error("There was a problem saving to file: %s.", e)
                     logger.error("The application is exiting.")
                     sys.exit(1)
-    
+
     # Evaluate performance
     elif args.step == "evaluate":
         # Check config
@@ -439,7 +429,7 @@ if __name__ == "__main__":
         # Import file
         try:
             test_df = import_file(args.input)
-        except boto3.exceptions.NoCredentialsError:  # type: ignore
+        except botocore.exceptions.NoCredentialsError:  # type: ignore
             logger.error("Missing AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY credentials; exiting.")
             sys.exit(1)
         except FileNotFoundError:
@@ -484,7 +474,7 @@ if __name__ == "__main__":
                 except FileNotFoundError:
                     logger.error("An invalid file location has been provided; exiting.")
                     sys.exit(1)
-                except boto3.exceptions.NoCredentialsError:  # type: ignore
+                except botocore.exceptions.NoCredentialsError:  # type: ignore
                     logger.error("Missing AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY credentials; exiting.")
                     sys.exit(1)
                 except Exception as e:
@@ -493,4 +483,3 @@ if __name__ == "__main__":
                     sys.exit(1)
     else:
         parser.print_help()
-
