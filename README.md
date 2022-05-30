@@ -280,7 +280,7 @@ To build the image, run from this directory (the root of the repo):
 To run the Flask app, run: 
 
 ```bash
- docker run -e SQLALCHEMY_DATABASE_URI --name flask-app --mount type=bind,source="$(pwd)",target=/app/data/ -p 5001:5000 final-project-app
+ docker run -e SQLALCHEMY_DATABASE_URI --name flask-app --mount type=bind,source="$(pwd)",target=/app/ -p 5001:5000 final-project-app
 ```
 You should be able to access the app at http://127.0.0.1:5001/ in your browser (Mac/Linux should also be able to access the app at http://127.0.0.1:5001/ or localhost:5001/) .
 
