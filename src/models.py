@@ -122,6 +122,7 @@ class Measures(Base):
     category = sql.Column(sql.String(100), unique=False, nullable=False)
     measureid = sql.Column(sql.String(100), unique=False, nullable=False)
     short_question_text = sql.Column(sql.String(100), unique=False, nullable=False)
+    long_question_text = sql.Column(sql.String(150), unique=False, nullable=True)
 
     def __repr__(self):
         return f"<Measures: category: {self.category}, measureid: {self.measureid},\
