@@ -338,6 +338,8 @@ if __name__ == "__main__":
                                 sys.exit(1)
                             else:
                                 add_params(config.SQLALCHEMY_DATABASE_URI, params)
+                        else:
+                            logger.warning("Model coefficients not recorded in database.")
                         dump_model(model,args.model)
                     except TypeError:
                         logger.error("Passed params and columns must be valid for \
