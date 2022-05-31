@@ -45,7 +45,7 @@ def create_range(engine : sql.engine.base.Engine,
                             min_value = min_val)
     session.add(sc_range)
     session.commit()
-    logger.info("Scaling range added.")
+    logger.info("Scaling range added to database.")
 
 def add_range(engine_string : str,
               valuename : str,

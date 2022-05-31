@@ -44,7 +44,7 @@ def create_params(engine : sql.engine.base.Engine,
     param_row = Parameters(**params)
     session.add(param_row)
     session.commit()
-    logger.info("Model coefficients and intercept added.")
+    logger.info("Model coefficients and intercept added to database.")
 
 
 def add_params(engine_string : str,
