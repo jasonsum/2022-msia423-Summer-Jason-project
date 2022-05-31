@@ -22,13 +22,13 @@
       <dl> 
          <div >
             <p>Welcome to the Community Health Estimator, a self-service population health estimator. The service estimates the proportion of community residents that rate their 
-               current health status as fair or poor. The projections are based on the below estimated heatlhcare demographics, behaviors, diagnoses of US counties.
+               current health status as fair or poor. The projections are based on the below estimated heatlhcare demographics, behaviors, and diagnoses of US counties.
                <br>
                <br>
                To estimate the proportion of your county's residents that rate their health as fair or poor, specify the below demographics of the population and click submit.
                <br>
                <br>
-               {{prediction}}
+               <p>Enter community demographics and submit for a prediction: <b>{{prediction}}</b></p>
             </p>
          </div>
          <h3>Community Health Outcome Measurements</h3>
@@ -81,7 +81,6 @@
             {% endfor %}
           </div>
           <button type="submit" class="btn btn-primary">Submit</button>
-          <button type="button" class="btn btn-secondary">Secondary</button>
       </dl>
    </div>
     </form>

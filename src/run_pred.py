@@ -105,6 +105,7 @@ class PredManager:
         """
         Seeds an existing database with new user feature input values.
 
+        Returns prediction as float in percentage format.
         See Measures table or reference information for more information about each measure.
 
         Args:
@@ -197,7 +198,7 @@ class PredManager:
         session.add(input)
         logger.info("New prediction generated: %.2f", prob)
         session.commit()
-        return prob
+        return round(prob*100, 2)
 
     def remove_inputs(self) -> None:
         """

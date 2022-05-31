@@ -148,12 +148,13 @@ def add_entry():
                                             northeast=int(regions["northeast"]),
                                             south=int(regions["south"]),
                                             southwest=int(regions["southwest"]))
+        prob = str(prob) + "%" # Cast to string percentage for display
         logger.info("New prediction recorded.")
         return render_template("index.html", 
                                hlth_outcomes=hlth_outcomes,
                                hlth_behaviors=hlth_behaviors,
                                hlth_prevention=hlth_prevention,
-                               prediction=str(prob))
+                               prediction=prob)
     except sqlite3.OperationalError as e:
         logger.error(
             "Error page returned. Not able to access database"
