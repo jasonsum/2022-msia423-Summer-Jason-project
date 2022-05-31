@@ -1,4 +1,4 @@
-S3_BUCKET = s3://2022-msia423-summer-jason/data/
+S3_BUCKET = data/#s3://2022-msia423-summer-jason/data/
 LOCAL_DATA_PATH = data/clean/
 LOCAL_MODEL_PATH = models/
 MODEL_CONFIG = config/model-config.yaml
@@ -11,7 +11,7 @@ dirs:
 	mkdir -p ${LOCAL_MODEL_PATH}
 
 remove-local:
-	rm -f ${LOCAL_MODEL_PATH}* ${LOCAL_MODEL_PATH}*
+	rm -f ${LOCAL_MODEL_PATH}* ${LOCAL_DATA_PATH}*
 
 # Docker image for pipeline
 image: dirs
@@ -29,7 +29,7 @@ raw:
 	docker run -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e SOCRATA_TOKEN -e SOCRATA_USERNAME -e SOCRATA_PASSWORD --mount type=bind,source="$(shell pwd)",target=/app/ final-project ingest --config=${MODEL_CONFIG} --output=${S3_BUCKET}raw/raw_places.csv
 
 # Model pipeline commands (clean -> model evaluation)
-${LOCAL_DATA_PATH}clean.csv: raw
+${LOCAL_DATA_PATH}clean.csv:
 	docker run -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY --mount type=bind,source="$(shell pwd)",target=/app/ final-project clean --config=${MODEL_CONFIG} --input=${S3_BUCKET}raw/raw_places.csv --output=${LOCAL_DATA_PATH}clean.csv
 
 clean: ${LOCAL_DATA_PATH}clean.csv
@@ -65,13 +65,13 @@ training-recorded:
 
 # Full process commands
 # Reads raw from local, trains, evaluates model; nothing written to DB
-just-pipeline: dirs image clean features train_test model score performance
+just-pipeline: dirs image clean features train-test model score performance
 
 # just-pipeline with raw acquisition; no DB operations 
-acquisition+pipeline: dirs image raw clean features train_test model score performance
+acquisition+pipeline: dirs image raw clean features train-test model score performance
 
-# all model operations while writing to DB; no data acquisition
-pipeline+db: dirs image clean features_recorded train_recorded model score performance
+# all model operations while creating and writing to DB; no data acquisition
+pipeline+db: dirs image database add_measures clean features_recorded train_recorded model score performance
 
 # data acquisition, all model operations, all DB operations
 all: dirs image database add_measures raw clean features_recorded train_recorded score performance
