@@ -3,7 +3,7 @@ LOCAL_DATA_PATH = data/clean/
 LOCAL_MODEL_PATH = models/
 MODEL_CONFIG = config/model-config.yaml
 
-.PHONY: image database add_measures raw clean features features-recorded train-test model training-recorded score performance test-image unit-tests remove-local dirs just-pipeline acquisition+pipeline pipeline+db all
+.PHONY: image database add_measures raw clean features features-recorded train-test model train-recorded score performance test-image unit-tests remove-local dirs just-pipeline acquisition+pipeline pipeline+db all
 
 # Directory commands
 dirs:
@@ -60,7 +60,7 @@ performance: ${LOCAL_MODEL_PATH}performance.png
 features-recorded:
 	docker run -e SQLALCHEMY_DATABASE_URI --mount type=bind,source="$(shell pwd)",target=/app/ final-project featurize --config=${MODEL_CONFIG} --input=${LOCAL_DATA_PATH}clean.csv --output=${LOCAL_DATA_PATH}featurized.csv --write
 
-training-recorded:
+train-recorded:
 	docker run -e SQLALCHEMY_DATABASE_URI --mount type=bind,source="$(shell pwd)",target=/app/ final-project train --config=${MODEL_CONFIG} --input=${LOCAL_DATA_PATH}featurized.csv --output=${LOCAL_DATA_PATH}train_test.csv --model=${LOCAL_MODEL_PATH}model.sav --write
 
 # Full process commands
@@ -71,10 +71,10 @@ just-pipeline: dirs image clean features train-test model score performance
 acquisition+pipeline: dirs image raw clean features train-test model score performance
 
 # all model operations while creating and writing to DB; no data acquisition
-pipeline+db: dirs image database add_measures clean features_recorded train_recorded model score performance
+pipeline+db: dirs image database add_measures clean features-recorded train-recorded model score performance
 
 # data acquisition, all model operations, all DB operations
-all: dirs image database add_measures raw clean features_recorded train_recorded score performance
+all: dirs image database add_measures raw clean features-recorded train-recorded score performance
 
 # Unit testing
 test-image:
