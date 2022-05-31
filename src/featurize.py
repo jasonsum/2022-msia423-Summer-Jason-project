@@ -81,7 +81,7 @@ def add_range(engine_string : str,
                  max_val,
                  min_val)
 
-def scale_values(engine_string : str,
+def scale_values(engine_string : typing.Union[str, None],
                  places_pivot : pd.DataFrame,
                  columns : typing.Union[str, typing.List[str]]) -> pd.DataFrame:
     """
@@ -91,7 +91,9 @@ def scale_values(engine_string : str,
     column name as reference, to scaler_ranges table.
 
     Args:
-        engine_string (str) : SQL Alchemy database URI path.
+        engine_string (str, Optional) : SQL Alchemy database URI path.
+                                        If no engine_string is passed, 
+                                        nothing will be captured in database.
         places_pivot (dataframe) : Pivoted dataframe of PLACES data.
                                    See pivot_places return.
         min_max_scale (str) : Field name(s) to scale to [0,1] using min-max scaling.
@@ -108,10 +110,13 @@ def scale_values(engine_string : str,
             min_value = places_pivot[col].min()
             max_value = places_pivot[col].max()
             places_pivot["scaled_" + col] = (places_pivot[col]-min_value) / (max_value - min_value)
-            add_range(engine_string,
-                      col,
-                      min_value,
-                      max_value)
+            if engine_string is not None: # Don't write to DB is no engine string passed
+                add_range(engine_string,
+                          col,
+                          min_value,
+                          max_value)
+            else:
+                logger.warning("Scaling params not recorded in database.")
     except KeyError as k_err:
         logger.error("Columns passed for transformation could not be found.")
         raise KeyError("Columns passed for transformation could not be found.") from k_err

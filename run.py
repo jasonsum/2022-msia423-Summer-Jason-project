@@ -46,6 +46,9 @@ if __name__ == "__main__":
     parser.add_argument("--input", "-i", default=None, help="Path to retrieve input file")
     parser.add_argument("--output", "-o", default=None, help="Path to save transaction output file")
     parser.add_argument("--model", "-m", default=None, help="Path to trained model object")
+    parser.add_argument("--write", "-w", action='store_true', default=False,
+                        help="Whether to record coefficients/scaling param\
+                              values to SQLALCHEMY_DATABASE_URI database")
     args = parser.parse_args()
 
     # Load configuration file
@@ -225,11 +228,15 @@ if __name__ == "__main__":
                         places_pivot = one_hot_encode(places_pivot,
                                                     states_to_regions = states_region_mapping)
                     if featurize_data["scale_values"]["columns"]:
-                        # Capture correct RDS
-                        if config.SQLALCHEMY_DATABASE_URI is None:
-                            logger.error("Specify SQLALCHEMY_DATABASE_URI environment variable.")
-                            sys.exit(1)
-                        places_pivot = scale_values(config.SQLALCHEMY_DATABASE_URI,
+                        # Determine if records should be written to DB
+                        if args.write is False:
+                            SQLALCHEMY_DATABASE_URI = None # Null engine string to avoid writing to DB
+                        else:
+                            if config.SQLALCHEMY_DATABASE_URI is None:
+                                logger.error("Specify SQLALCHEMY_DATABASE_URI environment variable.")
+                                sys.exit(1)
+                            SQLALCHEMY_DATABASE_URI = config.SQLALCHEMY_DATABASE_URI
+                        places_pivot = scale_values(SQLALCHEMY_DATABASE_URI,
                                                     places_pivot,
                                                     **featurize_data["scale_values"])
                 except KeyError:
@@ -261,11 +268,6 @@ if __name__ == "__main__":
             logger.error("Configuration file is missing section for selected step; exiting.")
             sys.exit(1)
         train_model = mdl_config["train_model"]
-
-        # Capture correct RDS
-        if config.SQLALCHEMY_DATABASE_URI is None:
-            logger.error("Specify SQLALCHEMY_DATABASE_URI environment variable.")
-            sys.exit(1)
 
         # Import file
         try:
@@ -328,7 +330,14 @@ if __name__ == "__main__":
                                                   response = train_model["response"],
                                                   method = train_model["method"],
                                                   **train_model["params"])
-                        add_params(config.SQLALCHEMY_DATABASE_URI, params)
+                        # Determine if records should be written to DB
+                        if args.write:
+                            # Capture correct RDS
+                            if config.SQLALCHEMY_DATABASE_URI is None:
+                                logger.error("Specify SQLALCHEMY_DATABASE_URI environment variable.")
+                                sys.exit(1)
+                            else:
+                                add_params(config.SQLALCHEMY_DATABASE_URI, params)
                         dump_model(model,args.model)
                     except TypeError:
                         logger.error("Passed params and columns must be valid for \
