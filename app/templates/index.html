@@ -27,14 +27,14 @@
                <br>
                To estimate the proportion of your county's residents that rate their health as fair or poor, specify the below demographics of the population and click submit.
                <br>
-               <br>
-               <p>Enter community demographics and submit for a prediction: <b>{{prediction}}</b></p>
+               <p>Enter community proportions below and to estimate the level of fair/poor health: <b>{{prediction}}</b></p>
             </p>
          </div>
          <h3>Community Health Outcome Measurements</h3>
          {% for measure in hlth_outcomes %}
          <p>
-         <label for="customRange1" class="form-label">{{ measure.short_question_text }}</label>
+         <label for="customRange1" class="form-label"><b>{{ measure.short_question_text }}</b></label>
+         <label for="customRange1" class="form-desc">{{ measure.long_question_text }}</label>
          <span class="slider">
             <input name="{{ measure.measureid }}" type="range" class="form-range" id="{{ measure.measureid }}"
                 min="0" value=10 max="100" oninput="this.nextElementSibling.value = this.value">
@@ -46,7 +46,8 @@
          <h3>Community Health Risk Behavior Measurements</h3>
          {% for measure in hlth_behaviors %}
          <p>
-         <label for="customRange1" class="form-label">{{ measure.short_question_text }}</label>
+         <label for="customRange1" class="form-label"><b>{{ measure.short_question_text }}</b></label>
+         <label for="customRange1" class="form-desc">{{ measure.long_question_text }}</label>
          <span class="slider">
             <input name="{{ measure.measureid }}" type="range" class="form-range" id="{{ measure.measureid }}"
                 min="0" value=10 max="100" oninput="this.nextElementSibling.value = this.value">
@@ -57,7 +58,8 @@
          <h3>Community Preventative Measurements</h3>
          {% for measure in hlth_prevention %}
          <p>
-         <label for="customRange1" class="form-label">{{ measure.short_question_text }}</label>
+         <label for="customRange1" class="form-label"><b>{{ measure.short_question_text }}</b></label>
+         <label for="customRange1" class="form-desc">{{ measure.long_question_text }}</label>
          <span class="slider">
          <input name="{{ measure.measureid }}" id="{{ measure.measureid }}" type="range" class="form-range"
                 min="0" value=10 max="100" oninput="this.nextElementSibling.value = this.value">
@@ -67,7 +69,7 @@
          {% endfor %}
          <h3>Community Demographics</h3>
          <p>
-         <label for="customRange1" class="form-label">Community Population</label>
+         <label for="customRange1" class="form-label"><b>Community Population</b></label>
          <span class="slider">
          <input name="population" type="range" class="form-range" id="population"
                 min="0" value=5000 max="100000", value="1000" oninput="this.nextElementSibling.value = this.value">
@@ -75,12 +77,13 @@
          </span>
          </p>
          <div class="form-check form-check-inline">
+            <label class="form-label">Region</label>
             {% for region in ["midwest", "northeast", "south", "southwest", "west"] %}
             <input class="form-check-input" type="radio" name="region" id="{{region}}" value="{{region}}" checked>
             <label class="form-check-label"> {{ region }} </label>
             {% endfor %}
           </div>
-          <button type="submit" class="btn btn-primary">Submit</button>
+          <span><button type="submit" class="btn btn-primary"><b>Estimate</b></button></span>
       </dl>
    </div>
     </form>
