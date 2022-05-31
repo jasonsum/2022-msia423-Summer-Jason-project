@@ -28,23 +28,22 @@ The overall business success of the web application is based on usage and viewer
 
 The project is broken into two isolated but related components. The first component is a predictive model pipeline that leverages the raw 2019 [PLACES](https://chronicdata.cdc.gov/500-Cities-Places/PLACES-Local-Data-for-Better-Health-Census-Tract-D/cwsq-ngmh) data mentioned previously to create a measurable and reproducible model. The steps for this first component, explicitly, are database initialization, initial database population, raw data acquisition, data cleaning, data featurization, model training, prediction generation, and prediction evaluation. 
 
-The second component, is the open web application referenced previously. The web application can be executed via a local host by re-initializing the same database created for the model pipeline. Simiarly, the trained model can be re-created to render predictions on the locally served web app.
+The second component, is the open web application referenced previously. The web application can be executed via a local host. To do so, the pipeline above should be re-run, writing to a database along the way. The web application will then serve live predictions based on the trained model from the pipeline.
 
 # Table of Contents
 * [Directory structure ](#Directory-structure)
-* [Running the model pipeline ](#Directory-structure)
-	* [1. Initialize the database ](#1.-Initialize-the-database)
-	* [2. Acquire raw data ](#1.-Initialize-the-database)
-	* [3. Clean and featurize ](#1.-Initialize-the-database)
-	* [4. Train model and evaluate performance ](#1.-Initialize-the-database)
+* [Running the full pipeline ](#Running-the-full-pipeline)
+* [Running the independent pipeline steps](#Running-the-independent-pipeline-steps)
+    * [1. Setup directory and build image ](#1.-Setup-directory-and-build-image)
+	* [2. Initialize the database ](#2.-Initialize-the-database)
+	* [3. Acquire raw data ](#3.-Acquire-raw-data)
+	* [4. Clean and featurize ](#4.-Clean-and-featurize)
+	* [5. Train model and evaluate performance ](#5.-Train-model-and-evaluate-performance)
 * [Running the app ](#Running-the-app)
-	* [Building the image ](#1.-Initialize-the-database)
-	* [Running the app ](#1.-Initialize-the-database)
-	* [Kill the container ](#2.-Configure-Flask-app)
+	* [1. Building the image ](#1.-Building-the-image)
+	* [2. Running the app ](#2.-Running-the-app)
+	* [3. Kill the container ](#3.-Kill-the-container)
 * [Testing](#Testing)
-* [Mypy](#Mypy)
-* [Pylint](#Pylint)
-
 
 ## Directory structure 
 
@@ -95,19 +94,39 @@ The second component, is the open web application referenced previously. The web
 ├── run.py                            <- Simplifies the execution of modules contained in src/  
 ├── requirements.txt                  <- Python package dependencies 
 ```
-## Running the model pipeline 
-All steps in the pipeline can be run from docker. Alternatively, Make can be used to run every step in the pipeline or the entire pipeline.  Please use one or the other in each step. Running both is unnecessary. If you do not wish to run every step individually, you may execute the entire pipeline, starting from raw data acquisition through to model evaluation using the below commands.
+## Running the full pipeline 
+If you do not wish to run every model pipeline step individually, you may execute larger portions of the pipeline using any of the following make commands.
 
+Before running them however, please note that there are a couple requirements, as noted in the Makefile. These requirements are illustrated in the respective step in detail but summarised here:
+ - To create or write to any database, capture the database string as environment variable SQLALCHEMY_DATABASE_URI.
+ - If you intend to save the CDC PLACES raw data in S3, set your AWS credentails as environment variables AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY.
+ - The S3_BUCKET variable in the Makefile should be set to your selected S3 (or local) destination where raw data is located.
+ - To obtain the raw CDC PLACES raw data, a token, username, and password for (free) Socrata API must be obtained [here](https://chronicdata.cdc.gov/profile/edit/developer_settings) and set as environment variables SOCRATA_TOKEN, SOCRATA_USERNAME, SOCRATA_PASSWORD.
+
+To run just the model pipeline, from data cleaning through to model evaluation, run the below command. Please note that the raw CDC PLACES data should be saved prior and the S3_BUCKET variable in the Makefile set to the corresponding location. Using this command also assumes your AWS credentials have been saved as environment variables if you have the raw data in S3.
 ```bash
- make pipeline
+ make just-pipeline
 ```
 
-Before running the above, please note that there are a couple requirements, as noted in the Makefile. These requirements are illustrated in the respective step below; however, they are summarised here.
- - Database string must be set as environment variable SQLALCHEMY_DATABASE_URI.
- - AWS credentials (if you use S3) for raw data ingestion must be set as environment variables AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY.
- - A token, username, and password for (free) Socrata API must be obtained [here](https://chronicdata.cdc.gov/profile/edit/developer_settings) and set as environment variables SOCRATA_TOKEN, SOCRATA_USERNAME, SOCRATA_PASSWORD.
+To run the above statement with initial raw data acquisition as well, run the below command. Again, AWS credentials should be set as environment variables and the S3_BUCKET variable in the Makefile set to your S3 location. 
+```bash
+make acquisition+pipeline
+```
 
-### 1. Initialize the database 
+To run the model pipeline, from data cleaning through to model evaluation, with database creation and recording, run the below statement. Please note here that an appropriate database string should be set as environment variable SQLALCHEMY_DATABASE_URI.
+```bash
+make pipeline+db
+```
+
+Lastly, to run the above statement with raw data acquisition as well, run the below command.
+```bash
+make all
+```
+
+## Running the independent pipeline steps
+All steps in the pipeline can be run from docker. Alternatively, Make can be used to run every step in the pipeline.  Both have been provided in this section but please use one or the other in each step. Running both is unnecessary. 
+
+### 1. Setup directory and build image
 #### Create local sub-directories 
 
 To ensure certain sub-directories are available within the docker container, run the below from the root of the repo): 
@@ -136,6 +155,8 @@ Make:
 ```bash
  make image
 ```
+
+### 2. Initialize the database 
 #### Create the database 
 
 First ensure a database (local or remote) has been configured as environment variable, SQLALCHEMY_DATABASE_URI. To build the database, run the below: 
@@ -165,9 +186,9 @@ Make:
  make add_measures
 ```
 
-### 2. Acquire raw data 
+### 3. Acquire raw data 
 
-The data acquistion is configured to source the data from a CDC API (maintained by Socrata) and place the result as a csv in an S3 bucket. The API, a token, username, and password must be obtained and passed as environment variable. One can register and generate these credentials for free [here](https://chronicdata.cdc.gov/profile/edit/developer_settings). Once you've obtained these credentials, set them as environment variables SOCRATA_TOKEN, SOCRATA_USERNAME, and SOCRATA_PASSWORD, respectively.
+The data acquistion is configured to source the data from a CDC API (maintained by Socrata) and place the result as a csv in an S3 bucket. An app token, username, and password must be obtained and passed as environment variable. One can register and generate these credentials for free [here](https://chronicdata.cdc.gov/profile/edit/developer_settings). Once you've obtained these credentials, set them as environment variables SOCRATA_TOKEN, SOCRATA_USERNAME, and SOCRATA_PASSWORD, respectively.
 
 To use an S3 bucket as a destination, ensure your AWS credentials are set as environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.
 
@@ -184,7 +205,7 @@ Make:
 ```
 Again, the Makefile is configured to use S3 as a destination. To change to a different S3 bucket, change the S3_BUCKET variable at top of the Makefile. If you do not wish to use S3 as a destination, again remove the AWS credentials from the corresonding Makefile command and change the `--output` value in the Makefile.
 
-### 3. Clean and featurize
+### 4. Clean and featurize
 #### Clean the raw data
 
 The raw data will be imported from the previous step's `--output` destination. Similar to the previous step, AWS credentials should be set as environment variable or removed if you do not wish to a S3 bucket. 
@@ -202,25 +223,48 @@ Make:
 ```
 #### Featurize the data
 
-The clean data will be imported from the previous step's `--output` destination. During featurization, some columns may be scaled using min-max scaling. Their corresonding minimum and maximums will be captured in a database table, which requires the same SQLALCHEMY_DATABASE_URI environment variable to be set as was done previously (if it is not already done so).
+The clean data will be imported from the previous step's `--output` destination. 
 
 To creates the feature set, run the below statement:
 
 Docker:
 
 ```bash
- docker run -e SQLALCHEMY_DATABASE_URI --mount type=bind,source="$(pwd)",target=/app/ final-project featurize --config=config/model-config.yaml --input=data/clean/clean.csv --output=data/clean/featurized.csv
+ docker run --mount type=bind,source="$(pwd)",target=/app/ final-project featurize --config=config/model-config.yaml --input=data/clean/clean.csv --output=data/clean/featurized.csv
 ```
 Make:
 ```bash
  make features
 ```
-### 4. Train model and evaluate performance
+
+The app receives user input that needs to be scaled (using minimum and maximum) prior to serving predictions. Doing so requires that any columns scaled during featurization should be written to the database serving the app, along with corresponding scaling values. To run featurization and write scaling parameters to your database, run one of the below statements instead. Again, the SQLALCHEMY_DATABASE_URI should be set as the same database string used during database initialization and population.
+
+```bash
+ docker run -e SQLALCHEMY_DATABASE_URI --mount type=bind,source="$(pwd)",target=/app/ final-project featurize --config=config/model-config.yaml --input=data/clean/clean.csv --output=data/clean/featurized.csv
+```
+Make:
+```bash
+ make features-recorded
+```
+
+### 5. Train model and evaluate performance
 #### Train the model
 
-The feature data will be imported from the previous step's `--output` destination. During training, model parameters will be written to a database table, which requires the same SQLALCHEMY_DATABASE_URI environment variable to be set as was done previously (if it is not already done so). The training step will output two artifacts - a feature and response set which includes identification of training vs. test and a trained model object.  
+The feature data will be imported from the previous step's `--output` destination and model instantiation, train-test split, and training can be run using one of the below two commands. The training step will output two artifacts - a feature and response set which includes identification of training vs. test and a trained model object.  
 
 To execute the training step, run the below statement:
+
+Docker:
+
+```bash
+ docker run --mount type=bind,source="$(pwd)",target=/app/ final-project train --config=config/model-config.yaml --input=data/clean/featurized.csv --output=data/clean/train_test.csv --model=models/model.sav
+```
+Make:
+```bash
+ make model
+```
+
+Similiar to feature scaling, the training step can be configured to write model coefficients to a database table, which are used to generate live predictions in the online app. Again, writing to the database requires the same SQLALCHEMY_DATABASE_URI environment variable to be set as was done previously (if it is not already done so). To conduct the training step while writing to the database, run one of the below statements.
 
 Docker:
 
@@ -229,7 +273,7 @@ Docker:
 ```
 Make:
 ```bash
- make model
+ make train-recorded
 ```
 
 #### Generate predictions using model
@@ -265,9 +309,21 @@ Make:
 ```
 
 ## Running the app
-Before launching the app locally, ensure the model pipeline steps have been run, at least through to training. The app uses the same database created and populated during the above model pipeline steps. Below are the steps to serving the web app locally. Please note that the model used by the app will be trained only on the training data and not the proportion of data set aside as test data, as noted in the configuration file (`test_size`). This can be updated directly and pipeline re-run to train on more or all of the data.
+Before launching the app locally, ensure the model pipeline steps have been run, at least through to training. The app relies on the same database created and populated during the above model pipeline steps. To run all necessary steps to create and populate the database, set your database as environment variable SQLALCHEMY_DATABASE_URI and run the below make command.
 
-#### Build the image 
+```bash
+pipeline+db
+```
+
+Note that the above command assumes the raw CDC PLACES data has been placed in an S3 bucket and the S3_BUCKET variable has been set to this location in the Makefile. If you do not have the raw data, set the S3_BUCKET varialbe in the Makefile to your desired location and run the below command. You will need to obtain API access keys referenced in section Acquire raw data.
+
+```bash
+make all
+```
+
+Below are the steps to serving the web app locally. Please note that the model used by the app will be trained only on the training data and not the proportion of data set aside as test data, as noted in the configuration file (`test_size`). This can be updated directly and pipeline re-run to train on more or all of the data.
+
+#### 1. Build the image 
 
 To build the image, run from this directory (the root of the repo): 
 
@@ -275,7 +331,7 @@ To build the image, run from this directory (the root of the repo):
  docker build -f dockerfiles/Dockerfile.app -t final-project-app .
 ```
 
-#### Running the app
+#### 2. Running the app
 
 To run the Flask app, run: 
 
@@ -290,7 +346,7 @@ The arguments in the above command do the following:
 
 Note: If `PORT` in `config/flaskconfig.py` is changed, this port should be changed accordingly (as should the `EXPOSE 5000` line in `dockerfiles/Dockerfile.app`)
 
-#### Kill the container 
+#### 3. Kill the container 
 
 Once finished with the app, the container can be killed with the below command: 
 
