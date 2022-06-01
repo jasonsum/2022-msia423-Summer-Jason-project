@@ -14,7 +14,7 @@ import botocore
 import sqlalchemy.exc
 
 # Configurations
-import config.config as config
+from config import config
 
 # Modules
 from src.models import create_db
