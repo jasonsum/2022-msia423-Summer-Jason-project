@@ -48,8 +48,9 @@ def import_file(file_path : str,
         raise botocore.exceptions.NoCredentialsError(  # type: ignore
             "Missing AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY credentials.") from c_err
     except FileNotFoundError as f_err:
-        logger.error("Please provide a valid file location to import data.")
-        raise FileNotFoundError("Please provide a valid file location to import data.") from f_err
+        logger.error("Please provide a valid file location to import data: %s.", file_path)
+        raise FileNotFoundError("Please provide a valid file location\
+                                 to import data: %s.", file_path) from f_err
     except KeyError as k_err:
         logger.error("The selected columns were not found in the file.")
         raise KeyError("The selected columns were not found in the file.") from k_err
@@ -63,7 +64,8 @@ def import_file(file_path : str,
         if "Data_Value" in places.columns: # Only used for raw data cleaning
             # Drop row with null data_value
             places = places.drop(places.loc[places.Data_Value.isna()].index, axis=0)
-        logger.info("Data file successfully imported, valid row count is %i.", places.shape[0])
+        logger.info("Data file successfully imported from %s,\
+                     valid row count is %i.", file_path, places.shape[0])
 
     return places
 
