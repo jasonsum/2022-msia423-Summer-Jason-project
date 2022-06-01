@@ -30,7 +30,7 @@ raw:
 
 # Model pipeline commands (clean -> model evaluation)
 ${LOCAL_DATA_PATH}clean.csv:
-	docker run -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY --mount type=bind,source="$(shell pwd)",target=/app/ final-project clean --config=${MODEL_CONFIG} --input=${S3_BUCKET}raw/raw_places.csv --output=${LOCAL_DATA_PATH}clean.csv
+	docker run -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY --mount type=bind,source="$(shell pwd)",target=/app/ final-project clean --config=${MODEL_CONFIG} --input=${S3_BUCKET}raw/places_raw_data.csv --output=${LOCAL_DATA_PATH}clean.csv
 
 clean: ${LOCAL_DATA_PATH}clean.csv
 
