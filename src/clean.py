@@ -37,6 +37,7 @@ def import_file(file_path : str,
 
     places = pd.DataFrame()
     try:
+        logger.info("Importing %s...", file_path)
         places : pd.DataFrame = pd.read_csv(file_path,
                                             usecols = columns, #type:ignore
                                             sep = sep,
