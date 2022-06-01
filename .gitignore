@@ -6,10 +6,13 @@ __pycache__/
 .idea/
 .log
 .ipynb_checkpoints/
-
+.mysqlconfig
+.mysocrata
+.pylintrc
 
 data/*
 !data/sample/
 !data/external/
+!data/reference/
 config/local/*
 !.gitkeep

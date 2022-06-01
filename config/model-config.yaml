@@ -1,0 +1,140 @@
+ingest:
+  import_places_api: 
+    url: chronicdata.cdc.gov
+    dataset_identifier: cwsq-ngmh
+    attempts: 4
+model:
+  name: linear-regression
+  author: Jason Summer
+  version: AA1
+  description: Predicts the log-odds of the proportion of county population with poor health based on proportional demographics.
+  tags:
+    - regression
+    - health
+    - population health
+clean:
+  import_file:
+    columns: [StateDesc, CountyName, CountyFIPS, LocationID, TotalPopulation, Geolocation, MeasureId, Data_Value, Category, Short_Question_Text, Measure]
+  validate_df:
+    cols: 
+      StateDesc: object
+      CountyName: object
+      CountyFIPS: int
+      LocationID: int
+      TotalPopulation: int
+      Geolocation: object
+      MeasureId: object
+      Data_Value: float
+  prep_data:
+    response: GHLTH
+    invalid_measures: [TEETHLOST, SLEEP, MAMMOUSE, DENTAL, COREW, COREM, COLON_SCREEN, CERVICAL, LPA, MHLTH, PHLTH]
+featurize:
+  import_file:
+    columns: [StateDesc, CountyName, CountyFIPS, LocationID, TotalPopulation, Geolocation, ACCESS2, ARTHRITIS, BINGE, BPHIGH, BPMED, CANCER, CASTHMA, CHD, CHECKUP, CHOLSCREEN, COPD, CSMOKING, DEPRESSION, DIABETES, GHLTH, HIGHCHOL, KIDNEY, OBESITY, STROKE]
+  validate_df:
+    cols:
+      StateDesc: object
+      CountyName: object
+      CountyFIPS: int
+      LocationID: int
+      TotalPopulation: int
+      Geolocation: object
+      ACCESS2: float
+      ARTHRITIS: float
+      BINGE: float
+      BPHIGH: float
+      BPMED: float
+      CANCER: float
+      CASTHMA: float
+      CHD: float
+      CHECKUP: float
+      CHOLSCREEN: float
+      COPD: float
+      CSMOKING: float
+      DEPRESSION: float
+      DIABETES: float
+      GHLTH: float
+      HIGHCHOL: float
+      KIDNEY: float
+      OBESITY: float
+      STROKE: float
+  reformat_measures:
+    make_floats: [ACCESS2, ARTHRITIS, BINGE, BPHIGH, BPMED, CANCER, CASTHMA, CHD, CHECKUP, CHOLSCREEN, COPD, CSMOKING, DEPRESSION, DIABETES, GHLTH, HIGHCHOL, KIDNEY, OBESITY, STROKE]
+    make_logit: GHLTH
+  one_hot_encode:
+    states_region: True 
+  scale_values:
+    columns: TotalPopulation
+train_test_split:
+  test_size: 0.3
+  random_state: 42
+train_model:
+  features: [ACCESS2, ARTHRITIS, BINGE, BPHIGH, BPMED, CANCER, CASTHMA, CHD, CHECKUP, CHOLSCREEN, COPD, CSMOKING, DEPRESSION, DIABETES, HIGHCHOL, KIDNEY, OBESITY, STROKE, scaled_TotalPopulation, Midwest, Northeast, South, Southwest]
+  response: GHLTH
+  validate_df:
+    cols: 
+      ACCESS2: float
+      ARTHRITIS: float
+      BINGE: float
+      BPHIGH: float
+      BPMED: float
+      CANCER: float
+      CASTHMA: float
+      CHD: float
+      CHECKUP: float
+      CHOLSCREEN: float
+      COPD: float
+      CSMOKING: float
+      DEPRESSION: float
+      DIABETES: float
+      HIGHCHOL: float
+      KIDNEY: float
+      OBESITY: float
+      STROKE: float
+      scaled_TotalPopulation: float
+      Midwest: int
+      Northeast: int
+      South: int
+      Southwest: int
+  method: LinearRegression
+  params:
+     fit_intercept: True
+score:
+  validate_df:
+    cols:
+      ACCESS2: float
+      ARTHRITIS: float
+      BINGE: float
+      BPHIGH: float
+      BPMED: float
+      CANCER: float
+      CASTHMA: float
+      CHD: float
+      CHECKUP: float
+      CHOLSCREEN: float
+      COPD: float
+      CSMOKING: float
+      DEPRESSION: float
+      DIABETES: float
+      HIGHCHOL: float
+      KIDNEY: float
+      OBESITY: float
+      STROKE: float
+      scaled_TotalPopulation: float
+      Midwest: int
+      Northeast: int
+      South: int
+      Southwest: int
+      training: int
+evaluate:
+  validate_df:
+    cols:
+      GHLTH: float
+      predictions: float
+  visualize_performance:
+    rmse: True
+    true_col: GHLTH
+    pred_col: predictions
+    comp_prop: True
+
+

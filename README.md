@@ -14,7 +14,7 @@ To improve population health demographics and outcomes, this effort seeks to pri
 
 ## Mission
 
-Machine learning modeling is used as a mechanism for both highlighting key contributors of health statuses and estimating population health risk. More specifically, machine learning models leverage 2018 and 2019 [PLACES](https://chronicdata.cdc.gov/500-Cities-Places/PLACES-Local-Data-for-Better-Health-Census-Tract-D/cwsq-ngmh) data to predict population proportions with poor/fair health by understanding the relationship among 29 health measures, population sizes, and geographical areas. 
+Machine learning modeling is used as a mechanism for both highlighting key contributors of health statuses and estimating population health risk. More specifically, machine learning models leverage 2019 [PLACES](https://chronicdata.cdc.gov/500-Cities-Places/PLACES-Local-Data-for-Better-Health-Census-Tract-D/cwsq-ngmh) data to predict population proportions with poor/fair health by understanding the relationship among 18 health measures, population sizes, and geographical areas. 
 
 The selected model is served to users through an open web application, wherein users can select various health outcomes, population sizes, and geographical areas to receive a predicted population proportion with poor/fair health. More importantly, the application seeks to accomplish the two key tasks - highlight the impact to predicted population proportions based on changing user inputs and provide a proactive tool for users to identify populations that may be at-risk based on trending figures. 
 
@@ -24,242 +24,354 @@ RMSE (root mean squared error) of the predicted population proportion with poor/
 
 The overall business success of the web application is based on usage and viewership. To better articulate and measure such goals, return users (within 1 week) and number of predictions generated per user session should be used. 
 
+## Project Structure Overview
+
+The project is broken into two isolated but related components. The first component is a predictive model pipeline that leverages the raw 2019 [PLACES](https://chronicdata.cdc.gov/500-Cities-Places/PLACES-Local-Data-for-Better-Health-Census-Tract-D/cwsq-ngmh) data mentioned previously to create a measurable and reproducible model. The steps for this first component, explicitly, are database initialization, initial database population, raw data acquisition, data cleaning, data featurization, model training, prediction generation, and prediction evaluation. 
+
+The second component, is the open web application referenced previously. The web application can be executed via a local host. To do so, the pipeline above should be re-run, writing to a database along the way. The web application will then serve live predictions based on the trained model from the pipeline.
+
 # Table of Contents
 * [Directory structure ](#Directory-structure)
+* [Running the full pipeline ](#Running-the-full-pipeline)
+* [Running the independent pipeline steps](#Running-the-independent-pipeline-steps)
+    * [1. Setup directory and build image ](#1.-Setup-directory-and-build-image)
+	* [2. Initialize the database ](#2.-Initialize-the-database)
+	* [3. Acquire raw data ](#3.-Acquire-raw-data)
+	* [4. Clean and featurize ](#4.-Clean-and-featurize)
+	* [5. Train model and evaluate performance ](#5.-Train-model-and-evaluate-performance)
 * [Running the app ](#Running-the-app)
-	* [1. Initialize the database ](#1.-Initialize-the-database)
-	* [2. Configure Flask app ](#2.-Configure-Flask-app)
-	* [3. Run the Flask app ](#3.-Run-the-Flask-app)
+	* [1. Building the image ](#1.-Building-the-image)
+	* [2. Running the app ](#2.-Running-the-app)
+	* [3. Kill the container ](#3.-Kill-the-container)
 * [Testing](#Testing)
-* [Mypy](#Mypy)
-* [Pylint](#Pylint)
-
 
 ## Directory structure 
 
 ```
 ├── README.md                         <- You are here
-├── api
-│   ├── static/                       <- CSS, JS files that remain static
-│   ├── templates/                    <- HTML (or other code) that is templated and changes based on a set of inputs│    
+├── app
+│   ├── static/                       <- CSS that remain static
+│   ├── templates/                    <- HTML (or other code) that is templated and changes based on a set of inputs    
 │
 ├── config                            <- Directory for configuration files 
 │   ├── local/                        <- Directory for keeping environment variables and other local configurations that *do not sync** to Github 
 │   ├── logging/                      <- Configuration of python loggers
 │   ├── flaskconfig.py                <- Configurations for Flask API 
+│   ├── config.py                     <- Configurations for capturing environment variable passed explicitly to run.py 
+│   ├── model-config.py               <- Model pipelineConfigurations for capturing environment variable passed explicitly to run.py 
 │
-├── data                              <- Folder that contains data used or generated. Only the external/ and sample/ subdirectories are tracked by git. 
+├── data                              <- Folder that contains data used or generated. Only the external/, sample/, and reference/ are tracked by git. 
 │   ├── external/                     <- External data sources, usually reference data,  will be synced with git
 │   ├── sample/                       <- Sample data used for code development and testing, will be synced with git
+│   ├── reference/                    <- Data mapping values and other reference material necessary for execution
 │
-├── deliverables/                     <- Any white papers, presentations, final work products that are presented or delivered to a stakeholder 
+├── deliverables/                     <- Presentation materials for stakeholder consumption 
 │
 ├── docs/                             <- Sphinx documentation based on Python docstrings. Optional for this project.
 |
 ├── dockerfiles/                      <- Directory for all project-related Dockerfiles 
-│   ├── Dockerfile.app                <- Dockerfile for building image to run web app
-│   ├── Dockerfile.run                <- Dockerfile for building image to execute run.py  
-│   ├── Dockerfile.test               <- Dockerfile for building image to run unit tests
+│   ├── Dockerfile.app                <- Dockerfile for building image to run web app.
+│   ├── Dockerfile.run                <- Dockerfile for building image to execute run.py. 
+│   ├── Dockerfile.test               <- Dockerfile for building image to run unit tests.
 │
-├── figures/                          <- Generated graphics and figures to be used in reporting, documentation, etc
+├── Makefile/                         <- Organizes execution of pipeline tasks and dependencies.
 │
-├── models/                           <- Trained model objects (TMOs), model predictions, and/or model summaries
+│
+├── models/                           <- Trained model objects (TMOs), model predictions, and/or model summaries.
 │
 ├── notebooks/
-│   ├── archive/                      <- Develop notebooks no longer being used.
-│   ├── deliver/                      <- Notebooks shared with others / in final state
-│   ├── develop/                      <- Current notebooks being used in development.
-│   ├── template.ipynb                <- Template notebook for analysis with useful imports, helper functions, and SQLAlchemy setup. 
+│   ├── archive/                      <- Open directory for previous notebooks.
+│   ├── deliver/                      <- Open directory for notebooks to share with others.
+│   ├── develop/                      <- Open directory for active development.
 │
-├── reference/                        <- Any reference material relevant to the project
+├── reference/                        <- CDC measure information
 │
-├── src/                              <- Source data for the project. No executable Python files should live in this folder.  
+├── src/                              <- Source data for the project; Python modules executed via run.py and app.py  
 │
-├── test/                             <- Files necessary for running model tests (see documentation below) 
+├── test/                             <- Files necessary for running unit tests on pipeline 
 │
 ├── app.py                            <- Flask wrapper for running the web app 
-├── run.py                            <- Simplifies the execution of one or more of the src scripts  
+├── run.py                            <- Simplifies the execution of modules contained in src/  
 ├── requirements.txt                  <- Python package dependencies 
 ```
+## Running the full pipeline 
+If you do not wish to run every model pipeline step individually, you may execute larger portions of the pipeline using any of the following make commands.
 
-## Running the app 
+Before running them however, please note that there are a couple requirements, as noted in the Makefile. These requirements are illustrated in the respective step in detail but summarised here:
+ - To create or write to any database, capture the database string as environment variable SQLALCHEMY_DATABASE_URI.
+ - If you intend to save the CDC PLACES raw data in S3, set your AWS credentails as environment variables AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY.
+ - The S3_BUCKET variable in the Makefile should be set to your selected S3 (or local) destination where raw data is located.
+ - To obtain the raw CDC PLACES raw data, a token, username, and password for (free) Socrata API must be obtained [here](https://chronicdata.cdc.gov/profile/edit/developer_settings) and set as environment variables SOCRATA_TOKEN, SOCRATA_USERNAME, SOCRATA_PASSWORD.
 
-### 1. Initialize the database 
+To run just the model pipeline, from data cleaning through to model evaluation, run the below command. Please note that the raw CDC PLACES data should be saved prior and the S3_BUCKET variable in the Makefile set to the corresponding location. Using this command also assumes your AWS credentials have been saved as environment variables if you have the raw data in S3.
+```bash
+ make just-pipeline
+```
+
+To run the above statement with initial raw data acquisition as well, run the below command. Again, AWS credentials should be set as environment variables and the S3_BUCKET variable in the Makefile set to your S3 location. 
+```bash
+make acquisition+pipeline
+```
+
+To run the model pipeline, from data cleaning through to model evaluation, with database creation and recording, run the below statement. Please note here that an appropriate database string should be set as environment variable SQLALCHEMY_DATABASE_URI.
+```bash
+make pipeline+db
+```
+
+Lastly, to run the above statement with raw data acquisition as well, run the below command.
+```bash
+make all
+```
+
+## Running the independent pipeline steps
+All steps in the pipeline can be run from docker. Alternatively, Make can be used to run every step in the pipeline.  Both have been provided in this section but please use one or the other in each step. Running both is unnecessary. 
+
+### 1. Setup directory and build image
+#### Create local sub-directories 
+
+To ensure certain sub-directories are available within the docker container, run the below from the root of the repo): 
+
+```bash
+ mkdir -p data/clean/
+ mkdir -p models/
+```
+Or you may use the below, Make command.
+
+Make:
+```bash
+ make dirs
+```
 #### Build the image 
 
 To build the image, run from this directory (the root of the repo): 
 
+Docker:
+
 ```bash
- docker build -f dockerfiles/Dockerfile.run -t pennylanedb .
+ docker build -f dockerfiles/Dockerfile -t final-project .
 ```
+
+Make:
+```bash
+ make image
+```
+
+### 2. Initialize the database 
 #### Create the database 
-To create the database in the location configured in `config.py` run: 
+
+First ensure a database (local or remote) has been configured as environment variable, SQLALCHEMY_DATABASE_URI. To build the database, run the below: 
+
+Docker:
 
 ```bash
-docker run --mount type=bind,source="$(pwd)"/data,target=/app/data/ pennylanedb create_db  --engine_string=sqlite:///data/tracks.db
+ docker run -e SQLALCHEMY_DATABASE_URI --mount type=bind,source="$(pwd)",target=/app/ final-project create_db
 ```
-The `--mount` argument allows the app to access your local `data/` folder and save the SQLite database there so it is available after the Docker container finishes.
+The `--mount` argument allows the app to access your local directory  and render outputs there after the Docker container finishes.
 
+Make:
+```bash
+ make database
+```
+#### Populate the database 
 
-#### Adding songs 
-To add songs to the database:
+To add initial records to the database, run the below statement. This will populate CDC measurement definitions which are used in the web app.
+
+Docker:
 
 ```bash
-docker run --mount type=bind,source="$(pwd)"/data,target=/app/data/ pennylanedb ingest --engine_string=sqlite:///data/tracks.db --artist=Emancipator --title="Minor Cause" --album="Dusk to Dawn"
+ docker run -e SQLALCHEMY_DATABASE_URI --mount type=bind,source="$(pwd)",target=/app/ final-project add_measures
+```
+Make:
+```bash
+ make add_measures
 ```
 
-#### Defining your engine string 
-A SQLAlchemy database connection is defined by a string with the following format:
+### 3. Acquire raw data 
 
-`dialect+driver://username:password@host:port/database`
+The data acquistion is configured to source the data from a CDC API (maintained by Socrata) and place the result as a csv in an S3 bucket. An app token, username, and password must be obtained and passed as environment variable. One can register and generate these credentials for free [here](https://chronicdata.cdc.gov/profile/edit/developer_settings). Once you've obtained these credentials, set them as environment variables SOCRATA_TOKEN, SOCRATA_USERNAME, and SOCRATA_PASSWORD, respectively.
 
-The `+dialect` is optional and if not provided, a default is used. For a more detailed description of what `dialect` and `driver` are and how a connection is made, you can see the documentation [here](https://docs.sqlalchemy.org/en/13/core/engines.html). We will cover SQLAlchemy and connection strings in the SQLAlchemy lab session on 
-##### Local SQLite database 
+To use an S3 bucket as a destination, ensure your AWS credentials are set as environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.
 
-A local SQLite database can be created for development and local testing. It does not require a username or password and replaces the host and port with the path to the database file: 
+Docker:
 
-```python
-engine_string='sqlite:///data/tracks.db'
+```bash
+ docker run -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e SOCRATA_TOKEN -e SOCRATA_USERNAME -e SOCRATA_PASSWORD --mount type=bind,source="$(pwd)",target=/app/ final-project ingest --config=config/model-config.yaml --output=${S3_BUCKET}raw/raw_places.csv
+```
+The `--config` argument should be used for the pipeline configuration provided in the repository. If you do not wish to use an S3 bucket, you may change the `--output` argument to a different destination and remove the AWS credentials in the above command.
 
+Make:
+```bash
+ make raw
+```
+Again, the Makefile is configured to use S3 as a destination. To change to a different S3 bucket, change the S3_BUCKET variable at top of the Makefile. If you do not wish to use S3 as a destination, again remove the AWS credentials from the corresonding Makefile command and change the `--output` value in the Makefile.
+
+### 4. Clean and featurize
+#### Clean the raw data
+
+The raw data will be imported from the previous step's `--output` destination. Similar to the previous step, AWS credentials should be set as environment variable or removed if you do not wish to a S3 bucket. 
+
+To clean the raw data, run the below statement:
+
+Docker:
+
+```bash
+ docker run -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY --mount type=bind,source="$(pwd)",target=/app/ final-project clean --config=config/model-config.yaml --input=${S3_BUCKET}raw/raw_places.csv --output=data/clean/clean.csv
+```
+Make:
+```bash
+ make clean
+```
+#### Featurize the data
+
+The clean data will be imported from the previous step's `--output` destination. 
+
+To creates the feature set, run the below statement:
+
+Docker:
+
+```bash
+ docker run --mount type=bind,source="$(pwd)",target=/app/ final-project featurize --config=config/model-config.yaml --input=data/clean/clean.csv --output=data/clean/featurized.csv
+```
+Make:
+```bash
+ make features
 ```
 
-The three `///` denote that it is a relative path to where the code is being run (which is from the root of this directory).
+The app receives user input that needs to be scaled (using minimum and maximum) prior to serving predictions. Doing so requires that any columns scaled during featurization should be written to the database serving the app, along with corresponding scaling values. To run featurization and write scaling parameters to your database, run one of the below statements instead. Again, the SQLALCHEMY_DATABASE_URI should be set as the same database string used during database initialization and population.
 
-You can also define the absolute path with four `////`, for example:
-
-```python
-engine_string = 'sqlite://///Users/cmawer/Repos/2022-msia423-template-repository/data/tracks.db'
+```bash
+ docker run -e SQLALCHEMY_DATABASE_URI --mount type=bind,source="$(pwd)",target=/app/ final-project featurize --config=config/model-config.yaml --input=data/clean/clean.csv --output=data/clean/featurized.csv
+```
+Make:
+```bash
+ make features-recorded
 ```
 
+### 5. Train model and evaluate performance
+#### Train the model
 
-### 2. Configure Flask app 
+The feature data will be imported from the previous step's `--output` destination and model instantiation, train-test split, and training can be run using one of the below two commands. The training step will output two artifacts - a feature and response set which includes identification of training vs. test and a trained model object.  
 
-`config/flaskconfig.py` holds the configurations for the Flask app. It includes the following configurations:
+To execute the training step, run the below statement:
 
-```python
-DEBUG = True  # Keep True for debugging, change to False when moving to production 
-LOGGING_CONFIG = "config/logging/local.conf"  # Path to file that configures Python logger
-HOST = "0.0.0.0" # the host that is running the app. 0.0.0.0 when running locally 
-PORT = 5000  # What port to expose app on. Must be the same as the port exposed in dockerfiles/Dockerfile.app 
-SQLALCHEMY_DATABASE_URI = 'sqlite:///data/tracks.db'  # URI (engine string) for database that contains tracks
-APP_NAME = "penny-lane"
-SQLALCHEMY_TRACK_MODIFICATIONS = True 
-SQLALCHEMY_ECHO = False  # If true, SQL for queries made will be printed
-MAX_ROWS_SHOW = 100 # Limits the number of rows returned from the database 
+Docker:
+
+```bash
+ docker run --mount type=bind,source="$(pwd)",target=/app/ final-project train --config=config/model-config.yaml --input=data/clean/featurized.csv --output=data/clean/train_test.csv --model=models/model.sav
+```
+Make:
+```bash
+ make model
 ```
 
-### 3. Run the Flask app 
+Similiar to feature scaling, the training step can be configured to write model coefficients to a database table, which are used to generate live predictions in the online app. Again, writing to the database requires the same SQLALCHEMY_DATABASE_URI environment variable to be set as was done previously (if it is not already done so). To conduct the training step while writing to the database, run one of the below statements.
 
-#### Build the image 
+Docker:
+
+```bash
+ docker run -e SQLALCHEMY_DATABASE_URI --mount type=bind,source="$(pwd)",target=/app/ final-project train --config=config/model-config.yaml --input=data/clean/featurized.csv --output=data/clean/train_test.csv --model=models/model.sav
+```
+Make:
+```bash
+ make train-recorded
+```
+
+#### Generate predictions using model
+
+Both outputs, `--output` and `--model` from the previous section will be imported to generate predictions on the test set. 
+
+To execute the scoring step, run the below statement:
+
+Docker:
+
+```bash
+ docker run --mount type=bind,source="$(pwd)",target=/app/ final-project score --config=config/model-config.yaml --input=data/clean/train_test.csv --output=data/clean/score.csv --model=models/model.sav
+```
+Make:
+```bash
+ make score
+```
+
+#### Evalute predictions from model
+
+The scores from the previous step's `--output` destination will be used to generate evaluation metrics. 
+
+To execute the evaluation step, run the below statement:
+
+Docker:
+
+```bash
+ docker run --mount type=bind,source="$(pwd)",target=/app/ final-project evaluate --config=config/model-config.yaml --input=data/clean/score.csv --output=models/performance.png
+```
+Make:
+```bash
+ make performance
+```
+
+## Running the app
+Before launching the app locally, ensure the model pipeline steps have been run, at least through to training. The app relies on the same database created and populated during the above model pipeline steps. To run all necessary steps to create and populate the database, set your database as environment variable SQLALCHEMY_DATABASE_URI and run the below make command.
+
+```bash
+pipeline+db
+```
+
+Note that the above command assumes the raw CDC PLACES data has been placed in an S3 bucket and the S3_BUCKET variable has been set to this location in the Makefile. If you do not have the raw data, set the S3_BUCKET varialbe in the Makefile to your desired location and run the below command. You will need to obtain API access keys referenced in section Acquire raw data.
+
+```bash
+make all
+```
+
+Below are the steps to serving the web app locally. Please note that the model used by the app will be trained only on the training data and not the proportion of data set aside as test data, as noted in the configuration file (`test_size`). This can be updated directly and pipeline re-run to train on more or all of the data.
+
+#### 1. Build the image 
 
 To build the image, run from this directory (the root of the repo): 
 
 ```bash
- docker build -f dockerfiles/Dockerfile.app -t pennylaneapp .
+ docker build -f dockerfiles/Dockerfile.app -t final-project-app .
 ```
 
-This command builds the Docker image, with the tag `pennylaneapp`, based on the instructions in `dockerfiles/Dockerfile.app` and the files existing in this directory.
-
-#### Running the app
+#### 2. Running the app
 
 To run the Flask app, run: 
 
 ```bash
- docker run --name test-app --mount type=bind,source="$(pwd)"/data,target=/app/data/ -p 5000:5000 pennylaneapp
+ docker run -e SQLALCHEMY_DATABASE_URI --name flask-app --mount type=bind,source="$(pwd)",target=/app/ -p 5001:5000 final-project-app
 ```
-You should be able to access the app at http://127.0.0.1:5000/ in your browser (Mac/Linux should also be able to access the app at http://127.0.0.1:5000/ or localhost:5000/) .
+You should be able to access the app at http://127.0.0.1:5001/ in your browser (Mac/Linux should also be able to access the app at http://127.0.0.1:5001/ or localhost:5001/) .
 
 The arguments in the above command do the following: 
 
-* The `--name test-app` argument names the container "test". This name can be used to kill the container once finished with it.
-* The `--mount` argument allows the app to access your local `data/` folder so it can read from the SQLlite database created in the prior section. 
-* The `-p 5000:5000` argument maps your computer's local port 5000 to the Docker container's port 5000 so that you can view the app in your browser. If your port 5000 is already being used for someone, you can use `-p 5001:5000` (or another value in place of 5001) which maps the Docker container's port 5000 to your local port 5001.
+* The `-p 5001:5000` argument maps your computer's local port 5001 to the Docker container's port 5000 so that you can view the app in your browser. If your port 5000 is already being used for someone, you can use `-p 5001:5000` (or another value in place of 5001) which maps the Docker container's port 5000 to your local port 5001.
 
 Note: If `PORT` in `config/flaskconfig.py` is changed, this port should be changed accordingly (as should the `EXPOSE 5000` line in `dockerfiles/Dockerfile.app`)
 
+#### 3. Kill the container 
 
-#### Kill the container 
-
-Once finished with the app, you will need to kill the container. If you named the container, you can execute the following: 
+Once finished with the app, the container can be killed with the below command: 
 
 ```bash
-docker kill test-app 
+docker kill flask-app 
 ```
-where `test-app` is the name given in the `docker run` command.
-
-If you did not name the container, you can look up its name by running the following:
-
-```bash 
-docker container ls
-```
-
-The name will be provided in the right most column. 
 
 ## Testing
 
-Run the following:
+To execute unit tests (with docker), first create the docker image with the below. 
 
+    
 ```bash
- docker build -f dockerfiles/Dockerfile.test -t pennylanetest .
+docker build -f dockerfiles/Dockerfile.test -t final-project-test . 
 ```
 
-To run the tests, run: 
+Next, the below command will execute the unit tests in tests/ from the container.
 
 ```bash
- docker run pennylanetest
+docker run final-project-test
 ```
-
-The following command will be executed within the container to run the provided unit tests under `test/`:  
-
+ Alternatively, to execute the same unit testing procedure with Makefiles. Run the below statements.
 ```bash
-python -m pytest
-``` 
-
-## Mypy
-
-Run the following:
-
-```bash
- docker build -f dockerfiles/Dockerfile.mypy -t pennymypy .
+make test-image
 ```
-
-To run mypy over all files in the repo, run: 
-
 ```bash
- docker run pennymypy .
-```
-To allow for quick iteration, mount your entire repo so changes in Python files are detected:
-
-
-```bash
- docker run --mount type=bind,source="$(pwd)"/,target=/app/ pennymypy .
-```
-
-To run mypy for a single file, run: 
-
-```bash
- docker run pennymypy run.py
-```
-
-## Pylint
-
-Run the following:
-
-```bash
- docker build -f dockerfiles/Dockerfile.pylint -t pennylint .
-```
-
-To run pylint for a file, run:
-
-```bash
- docker run pennylint run.py 
-```
-
-(or any other file name, with its path relative to where you are executing the command from)
-
-To allow for quick iteration, mount your entire repo so changes in Python files are detected:
-
-
-```bash
- docker run --mount type=bind,source="$(pwd)"/,target=/app/ pennylint run.py
+make unit-tests
 ```
