@@ -15,7 +15,7 @@ remove-local:
 
 # Docker image for pipeline
 image: dirs
-	docker build -f dockerfiles/Dockerfile.run -t final-project .
+	docker build -f dockerfiles/Dockerfile -t final-project .
 
 # Database commands
 database:
