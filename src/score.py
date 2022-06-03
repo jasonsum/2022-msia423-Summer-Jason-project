@@ -7,6 +7,7 @@ import typing
 import pickle
 
 import botocore
+import boto3
 import pandas as pd
 from sklearn.linear_model import LinearRegression
 
@@ -30,11 +31,11 @@ def import_model(save_path_name : str) -> LinearRegression:
     except FileNotFoundError as f_err:
         logger.error("A valid file path and name must be provided.")
         raise FileNotFoundError("A valid file path and name must be provided.") from f_err
-    except botocore.exceptions.NoCredentialsError as c_err:  # type: ignore
+    except boto3.exceptions.NoCredentialsError as c_err:  # type: ignore
         logger.error(
             "Please provide credentials AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY env variables."
             )
-        raise botocore.exceptions.NoCredentialsError(  # type: ignore
+        raise boto3.exceptions.NoCredentialsError(  # type: ignore
             "Missing AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY credentials") from c_err
     except Exception as e:
         logger.error("Error occurred while trying to import file: %s", e)

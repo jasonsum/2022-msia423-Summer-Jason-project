@@ -8,6 +8,7 @@ import logging
 
 import pandas as pd
 import botocore
+import boto3
 
 logger = logging.getLogger(__name__)
 
@@ -42,11 +43,11 @@ def import_file(file_path : str,
                                             usecols = columns, #type:ignore
                                             sep = sep,
                                             **kwargs)
-    except botocore.exceptions.NoCredentialsError as c_err:  # type: ignore
+    except boto3.exceptions.NoCredentialsError as c_err:  # type: ignore
         logger.error(
             "Please provide credentials AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY env variables."
             )
-        raise botocore.exceptions.NoCredentialsError(  # type: ignore
+        raise boto3.exceptions.NoCredentialsError(  # type: ignore
             "Missing AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY credentials.") from c_err
     except FileNotFoundError as f_err:
         logger.error("Please provide a valid file location to import data: %s.", file_path)

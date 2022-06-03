@@ -8,6 +8,7 @@ import time
 import requests
 import pandas as pd
 import botocore
+import boto3
 from sodapy import Socrata
 
 logger = logging.getLogger(__name__)
@@ -117,11 +118,11 @@ def upload_file(input_df : pd.DataFrame,
 
     try:
         input_df.to_csv(save_file_path, sep=sep)
-    except botocore.exceptions.NoCredentialsError as c_err:  # type: ignore
+    except boto3.exceptions.NoCredentialsError as c_err:  # type: ignore
         logger.error(
             "Please provide credentials AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY env variables."
             )
-        raise botocore.exceptions.NoCredentialsError(  # type: ignore
+        raise boto3.exceptions.NoCredentialsError(  # type: ignore
             "Missing AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY credentials.") from c_err
     except FileNotFoundError as f_err:
         logger.error("Please provide a valid file location to persist data.")

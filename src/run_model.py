@@ -7,6 +7,7 @@ import logging
 import pickle
 
 import botocore
+import boto3
 import pandas as pd
 import numpy as np
 from sklearn.linear_model import LinearRegression
@@ -149,11 +150,11 @@ def dump_model(trained_model : LinearRegression,
     except FileNotFoundError as f_err:
         logger.error("Please provide a valid file path.")
         raise FileNotFoundError("Please provide a valid file path.") from f_err
-    except botocore.exceptions.NoCredentialsError as c_err:  # type: ignore
+    except boto3.exceptions.NoCredentialsError as c_err:  # type: ignore
         logger.error(
             "Please provide credentials AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY env variables."
             )
-        raise botocore.exceptions.NoCredentialsError(  # type: ignore
+        raise boto3.exceptions.NoCredentialsError(  # type: ignore
             "Missing AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY credentials") from c_err
     except Exception as e:
         logger.error("Error occurred while trying to save file: %s", e)
