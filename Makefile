@@ -1,5 +1,6 @@
-S3_BUCKET = s3://2022-msia423-summer-jason/data/
+S3_BUCKET = s3://2022-msia423-summer-jason/data/raw
 LOCAL_DATA_PATH = data/clean/
+LOCAL_DATA_RAW = data/raw/
 LOCAL_MODEL_PATH = models/
 MODEL_CONFIG = config/model-config.yaml
 
@@ -9,6 +10,7 @@ MODEL_CONFIG = config/model-config.yaml
 dirs:
 	mkdir -p ${LOCAL_DATA_PATH}
 	mkdir -p ${LOCAL_MODEL_PATH}
+	mkdir -p ${LOCAL_DATA_RAW}
 
 remove-local:
 	rm -f ${LOCAL_MODEL_PATH}* ${LOCAL_DATA_PATH}*
@@ -26,11 +28,11 @@ add_measures: database
 
 # Raw data acquisition
 raw:
-	docker run -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e SOCRATA_TOKEN -e SOCRATA_USERNAME -e SOCRATA_PASSWORD --mount type=bind,source="$(shell pwd)",target=/app/ final-project ingest --config=${MODEL_CONFIG} --output=${S3_BUCKET}raw/places_raw_data.csv
+	docker run -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e SOCRATA_TOKEN -e SOCRATA_USERNAME -e SOCRATA_PASSWORD --mount type=bind,source="$(shell pwd)",target=/app/ final-project ingest --config=${MODEL_CONFIG} --output=${S3_BUCKET}places_raw_data.csv
 
 # Model pipeline commands (clean -> model evaluation)
 ${LOCAL_DATA_PATH}clean.csv:
-	docker run -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY --mount type=bind,source="$(shell pwd)",target=/app/ final-project clean --config=${MODEL_CONFIG} --input=${S3_BUCKET}raw/places_raw_data.csv --output=${LOCAL_DATA_PATH}clean.csv
+	docker run -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY --mount type=bind,source="$(shell pwd)",target=/app/ final-project clean --config=${MODEL_CONFIG} --input=${S3_BUCKET}places_raw_data.csv --output=${LOCAL_DATA_PATH}clean.csv
 
 clean: ${LOCAL_DATA_PATH}clean.csv
 
