@@ -101,7 +101,7 @@ Before running them however, please note that there are a couple requirements, a
  - To create or write to any database, capture the database string as environment variable SQLALCHEMY_DATABASE_URI.
  - If you intend to save the CDC PLACES raw data in S3, set your AWS credentails as environment variables AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY.
  - The S3_BUCKET variable in the Makefile should be set to your selected S3 (or local) destination where raw data is located.
- - To obtain the raw CDC PLACES raw data, a token, username, and password for (free) Socrata API must be obtained [here](https://chronicdata.cdc.gov/profile/edit/developer_settings) and set as environment variables SOCRATA_TOKEN, SOCRATA_USERNAME, SOCRATA_PASSWORD.
+ - To obtain the raw CDC PLACES raw data, a token, username, and password for (free) Socrata API must be obtained [here](https://chronicdata.cdc.gov/signup) and set as environment variables API_TOKEN, API_USERNAME, API_PASSWORD. Upon registration, generate an app token from the developer settings page.
 
 To run just the model pipeline, from data cleaning through to model evaluation, run the below command. Please note that the raw CDC PLACES data should be saved prior and the S3_BUCKET variable in the Makefile set to the corresponding location. Using this command also assumes your AWS credentials have been saved as environment variables if you have the raw data in S3.
 ```bash
@@ -188,14 +188,14 @@ Make:
 
 ### 3. Acquire raw data 
 
-The data acquistion is configured to source the data from a CDC API (maintained by Socrata) and place the result as a csv in an S3 bucket. An app token, username, and password must be obtained and passed as environment variable. One can register and generate these credentials for free [here](https://chronicdata.cdc.gov/profile/edit/developer_settings). Once you've obtained these credentials, set them as environment variables SOCRATA_TOKEN, SOCRATA_USERNAME, and SOCRATA_PASSWORD, respectively.
+The data acquistion is configured to source the data from a CDC API (maintained by Socrata) and place the result as a csv in an S3 bucket. An app token, username, and password must be obtained and passed as environment variable. One can register and generate these credentials for free [here](https://chronicdata.cdc.gov/signup). Once you've obtained these credentials from the developer settings page, set them as environment variables API_TOKEN, API_USERNAME, and API_PASSWORD, respectively.
 
 To use an S3 bucket as a destination, ensure your AWS credentials are set as environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY.
 
 Docker:
 
 ```bash
- docker run -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e SOCRATA_TOKEN -e SOCRATA_USERNAME -e SOCRATA_PASSWORD --mount type=bind,source="$(pwd)",target=/app/ final-project ingest --config=config/model-config.yaml --output=${S3_BUCKET}raw/raw_places.csv
+ docker run -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e API_TOKEN -e API_USERNAME -e API_PASSWORD --mount type=bind,source="$(pwd)",target=/app/ final-project ingest --config=config/model-config.yaml --output=${S3_BUCKET}raw/raw_places.csv
 ```
 The `--config` argument should be used for the pipeline configuration provided in the repository. If you do not wish to use an S3 bucket, you may change the `--output` argument to a different destination and remove the AWS credentials in the above command.
 
