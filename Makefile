@@ -28,7 +28,7 @@ add_measures: database
 
 # Raw data acquisition
 raw:
-	docker run -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e SOCRATA_TOKEN -e SOCRATA_USERNAME -e SOCRATA_PASSWORD --mount type=bind,source="$(shell pwd)",target=/app/ final-project ingest --config=${MODEL_CONFIG} --output=${S3_BUCKET}places_raw_data.csv
+	docker run -e AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY -e API_KEY -e API_USERNAME -e API_PASSWORD --mount type=bind,source="$(shell pwd)",target=/app/ final-project ingest --config=${MODEL_CONFIG} --output=${S3_BUCKET}places_raw_data.csv
 
 # Model pipeline commands (clean -> model evaluation)
 ${LOCAL_DATA_PATH}clean.csv:

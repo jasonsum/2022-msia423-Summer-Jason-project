@@ -29,6 +29,10 @@ def import_places_api(url : str,
     "Category", "Short_Question_Text", "Measure".
 
     Args:
+        url (str) : Website location or IP Address to retrieve data
+        app_token (str) : API token
+        socrata_username (str) : Username for PLACES API
+        socrata_password (str) : Password of PLACES API
         socrata_dataset_identifier (str) : Keyword phrase corresponding to PLACES schema.
                                            Defaults to "cwsq-ngmh".
         attempts (int) : Number of tries to to attempt API request before termination

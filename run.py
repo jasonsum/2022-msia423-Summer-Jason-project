@@ -91,9 +91,9 @@ if __name__ == "__main__":
             sys.exit(1)
         try:
             raw_data = import_places_api(**mdl_config["ingest"]["import_places_api"],
-                                        app_token=config.SOCRATA_TOKEN,   # type: ignore
-                                        socrata_username=config.SOCRATA_USERNAME,   # type: ignore
-                                        socrata_password=config.SOCRATA_PASSWORD)  # type: ignore
+                                        app_token=config.API_KEY,   # type: ignore
+                                        socrata_username=config.API_USERNAME,   # type: ignore
+                                        socrata_password=config.API_PASSWORD)  # type: ignore
         except requests.exceptions.ConnectionError:
             logger.error("A connection error has occurred; exiting.")
             sys.exit(1)
