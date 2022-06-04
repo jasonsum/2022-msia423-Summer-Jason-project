@@ -179,11 +179,11 @@ To add initial records to the database, run the below statement. This will popul
 Docker:
 
 ```bash
- docker run -e SQLALCHEMY_DATABASE_URI --mount type=bind,source="$(pwd)",target=/app/ final-project add_measures
+ docker run -e SQLALCHEMY_DATABASE_URI --mount type=bind,source="$(pwd)",target=/app/ final-project add-measures
 ```
 Make:
 ```bash
- make add_measures
+ make add-measures
 ```
 
 ### 3. Acquire raw data 

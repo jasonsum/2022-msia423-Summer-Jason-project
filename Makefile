@@ -4,7 +4,7 @@ LOCAL_DATA_RAW = data/raw/
 LOCAL_MODEL_PATH = models/
 MODEL_CONFIG = config/model-config.yaml
 
-.PHONY: image database add_measures raw clean features features-recorded train-test model train-recorded score performance test-image unit-tests remove-local dirs just-pipeline acquisition+pipeline pipeline+db all
+.PHONY: image database add-measures raw clean features features-recorded train-test model train-recorded score performance test-image unit-tests remove-local dirs just-pipeline acquisition+pipeline pipeline+db all
 
 # Directory commands
 dirs:
@@ -23,8 +23,8 @@ image: dirs
 database:
 	docker run -e SQLALCHEMY_DATABASE_URI --mount type=bind,source="$(shell pwd)",target=/app/ final-project create_db
 
-add_measures: database
-	docker run -e SQLALCHEMY_DATABASE_URI --mount type=bind,source="$(shell pwd)",target=/app/ final-project add_measures
+add-measures: database
+	docker run -e SQLALCHEMY_DATABASE_URI --mount type=bind,source="$(shell pwd)",target=/app/ final-project add-measures
 
 # Raw data acquisition
 raw:
@@ -73,10 +73,10 @@ just-pipeline: dirs image clean features train-test model score performance
 acquisition+pipeline: dirs image raw clean features train-test model score performance
 
 # all model operations while creating and writing to DB; no data acquisition
-pipeline+db: dirs image database add_measures clean features-recorded train-recorded model score performance
+pipeline+db: dirs image database add-measures clean features-recorded train-recorded model score performance
 
 # data acquisition, all model operations, all DB operations
-all: dirs image database add_measures raw clean features-recorded train-recorded score performance
+all: dirs image database add-measures raw clean features-recorded train-recorded score performance
 
 # Unit testing
 test-image:
