@@ -360,13 +360,13 @@ To execute unit tests (with docker), first create the docker image with the belo
 
     
 ```bash
-docker build -f dockerfiles/Dockerfile.test -t final-project-test . 
+docker build -f dockerfiles/Dockerfile.test -t final-project-tests . 
 ```
 
 Next, the below command will execute the unit tests in tests/ from the container.
 
 ```bash
-docker run final-project-test
+docker run final-project-tests
 ```
  Alternatively, to execute the same unit testing procedure with Makefiles. Run the below statements.
 ```bash

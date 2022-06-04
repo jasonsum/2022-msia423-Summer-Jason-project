@@ -80,7 +80,7 @@ all: dirs image database add-measures raw clean features-recorded train-recorded
 
 # Unit testing
 test-image:
-	docker build -f dockerfiles/Dockerfile.test -t final-project-test .
+	docker build -f dockerfiles/Dockerfile.test -t final-project-tests .
 
 unit-tests:
-	docker run final-project-test
+	docker run final-project-tests
