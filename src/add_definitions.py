@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 Base = declarative_base()
 
-def create_references(engine : sql.engine.base.Engine):
+def create_references(engine : sql.engine.base.Engine) -> None:
     """
     Creates database table of PLACES metric reference information.
 

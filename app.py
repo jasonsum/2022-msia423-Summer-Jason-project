@@ -62,7 +62,7 @@ except:
 
 
 @app.route("/")
-def index():
+def index() -> str:
     """
     Main view that lists measurements in the database.
 
@@ -101,7 +101,7 @@ def index():
 
 
 @app.route("/add", methods=["POST"])
-def add_entry():
+def add_entry() -> str:
     """
     View that process a POST to Features table
 
