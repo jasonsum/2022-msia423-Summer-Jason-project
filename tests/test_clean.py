@@ -3,8 +3,6 @@ Tests the functions contained in clean module.
 """
 
 import pytest
-
-import numpy as np
 import pandas as pd
 
 from src.clean import validate_df, pivot_measures, drop_null_responses, drop_invalid_measures
@@ -28,16 +26,16 @@ def test_validate_df():
             "OBESITY", 19.1, "Health Outcomes", "Obesity",
             "Obesity among adults aged >=18 years"]]
     df_in_index = [687146, 471561, 1432558]
-    df_in_columns = ["StateDesc", 
-                                "CountyName", 
-                                "CountyFIPS", 
-                                "LocationID", 
-                                "TotalPopulation", 
-                                "Geolocation", 
-                                "MeasureId", 
-                                "Data_Value", 
-                                "Category", 
-                                "Short_Question_Text", 
+    df_in_columns = ["StateDesc",
+                                "CountyName",
+                                "CountyFIPS",
+                                "LocationID",
+                                "TotalPopulation",
+                                "Geolocation",
+                                "MeasureId",
+                                "Data_Value",
+                                "Category",
+                                "Short_Question_Text",
                                 "Measure"]
     df_in = pd.DataFrame(df_in_values, index=df_in_index, columns=df_in_columns)
     # Create test output
@@ -75,16 +73,16 @@ def test_validate_df_type_err():
             "OBESITY", 19.1, "Health Outcomes", "Obesity",
             "Obesity among adults aged >=18 years"]]
     df_in_index = [687146, 471561, 1432558]
-    df_in_columns = ["StateDesc", 
-                                "CountyName", 
-                                "CountyFIPS", 
-                                "LocationID", 
-                                "TotalPopulation", 
-                                "Geolocation", 
-                                "MeasureId", 
-                                "Data_Value", 
-                                "Category", 
-                                "Short_Question_Text", 
+    df_in_columns = ["StateDesc",
+                                "CountyName",
+                                "CountyFIPS",
+                                "LocationID",
+                                "TotalPopulation",
+                                "Geolocation",
+                                "MeasureId",
+                                "Data_Value",
+                                "Category",
+                                "Short_Question_Text",
                                 "Measure"]
     df_in = pd.DataFrame(df_in_values, index=df_in_index, columns=df_in_columns)
 
@@ -210,14 +208,14 @@ def test_drop_null_responses():
         "{'type': 'Point', 'coordinates': [-80.38981016, 33.3179319]}",
         12.2, 30.5, 13.2]],
             index = [1,2],
-            columns = ["StateDesc", 
-                       "CountyName", 
-                       "CountyFIPS", 
+            columns = ["StateDesc",
+                       "CountyName",
+                       "CountyFIPS",
                        "LocationID",
                        "TotalPopulation",
-                       "Geolocation", 
-                       "COPD", 
-                       "GHLTH", 
+                       "Geolocation",
+                       "COPD",
+                       "GHLTH",
                        "MHLTH"])
 
     # Create test output
@@ -270,7 +268,7 @@ def test_drop_invalid_measures():
     df_in_columns = ["StateDesc", "CountyName", "CountyFIPS", "LocationID",
                             "TotalPopulation", "Geolocation", "DENTAL", "GHLTH", "MHLTH"]
     df_in = pd.DataFrame(df_in_values, index=df_in_index, columns=df_in_columns)
-    
+
     # Define expected output
     df_true = pd.DataFrame(
             [["Michigan", "Wayne", 26163, 26163543900, 901,
@@ -280,12 +278,12 @@ def test_drop_invalid_measures():
        ["South Carolina", "Orangeburg", 45075, 45075010200, 5097,
         "{'type': 'Point', 'coordinates': [-80.38981016, 33.3179319]}", 30.5]],
             index = [0,1,2],
-            columns = ["StateDesc", 
-                       "CountyName", 
-                       "CountyFIPS", 
+            columns = ["StateDesc",
+                       "CountyName",
+                       "CountyFIPS",
                        "LocationID",
                        "TotalPopulation",
-                       "Geolocation", 
+                       "Geolocation",
                        "GHLTH"])
 
     # Create test output

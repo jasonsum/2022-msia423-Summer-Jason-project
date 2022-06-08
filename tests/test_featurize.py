@@ -3,8 +3,6 @@ Tests the functions contained in featurize module.
 """
 
 import pytest
-
-import numpy as np
 import pandas as pd
 
 from src.featurize import reformat_measures, one_hot_encode
@@ -36,7 +34,7 @@ def test_reformat_measures():
         0.073, -1.1363018100969002, 0.317]],
             index = [43633, 31974, 16353],
             columns = ["StateDesc", "CountyName", "CountyFIPS", "LocationID",
-                       "TotalPopulation", "BPHIGH", "BPMED", 
+                       "TotalPopulation", "BPHIGH", "BPMED",
                        "CANCER", "GHLTH", "HIGHCHOL"])
 
     # Create test output

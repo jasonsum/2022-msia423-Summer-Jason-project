@@ -3,8 +3,6 @@ Tests the functions contained in evaluate module.
 """
 
 import pytest
-
-import numpy as np
 import pandas as pd
 
 from src.evaluate import capture_rmse

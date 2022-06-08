@@ -3,8 +3,6 @@ Tests the functions contained in train_test_split module.
 """
 
 import pytest
-
-import numpy as np
 import pandas as pd
 
 from src.train_test_split import split_data
@@ -106,13 +104,13 @@ def test_split_data_val_err():
             0.        ,  1.        ,  0.        ,  0.09214889]]
     df_in_index = [15510, 19119, 10311, 13791]
     df_in_columns = ["ACCESS2", "ARTHRITIS", "BINGE", "BPHIGH", "BPMED", "CANCER", "CASTHMA",
-        "CHD", "CHECKUP", "CHOLSCREEN", "COPD", "CSMOKING", "DEPRESSION",
-        "DIABETES", "GHLTH", "HIGHCHOL", "KIDNEY", "OBESITY", "STROKE",
-        "Midwest", "Northeast", "South", "Southwest", "scaled_TotalPopulation"]
+                     "CHD", "CHECKUP", "CHOLSCREEN", "COPD", "CSMOKING", "DEPRESSION",
+                     "DIABETES", "GHLTH", "HIGHCHOL", "KIDNEY", "OBESITY", "STROKE",
+                     "Midwest", "Northeast", "South", "Southwest", "scaled_TotalPopulation"]
     df_in = pd.DataFrame(df_in_values, index=df_in_index, columns=df_in_columns)
 
     # Create test output
     with pytest.raises(ValueError):
-        split_data(df_in, 
+        split_data(df_in,
                    test_size=2.0, # test_size must be float between 0 and 1
                    random_state=42)

@@ -3,8 +3,6 @@ Tests the functions contained in run_model module.
 """
 
 import pytest
-
-import numpy as np
 import pandas as pd
 
 from src.run_model import fit_model
@@ -37,7 +35,6 @@ def test_fit_model():
                           fit_intercept=True)
     # Round to avoid floating point issues
     params_test = {key:round(value,3) for (key,value) in params_test.items()}
-         
 
     # Test equality
     assert param_true == params_test
@@ -59,7 +56,7 @@ def test_fit_model_key_err():
                     "BINGE",
                     "GHLTH"]
     df_in = pd.DataFrame(df_in_values, index=df_in_index, columns=df_in_columns)
-    
+
     # Create test output
     with pytest.raises(KeyError):
         fit_model(df_in,
@@ -70,3 +67,4 @@ def test_fit_model_key_err():
                   response = "Not a column",
                   method = "linearregression",
                   fit_intercept=True)
+                  
