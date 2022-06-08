@@ -7,32 +7,32 @@ import pandas as pd
 
 from src.run_model import fit_model
 
+# Define input dataframe
+df_in_values = [[ 0.283     ,  0.2       , -1.11467689],
+                [ 0.135     ,  0.178     , -1.70356676],
+                [ 0.24      ,  0.157     , -1.38005604],
+                [ 0.36      ,  0.155     , -0.95440403]]
+df_in_index = [18149, 66384, 11855, 60766]
+df_in_columns = ["ACCESS2",
+                "BINGE",
+                "GHLTH"]
+df_in = pd.DataFrame(df_in_values, index=df_in_index, columns=df_in_columns)
 
 def test_fit_model():
     """
     Conducts happy path unit test for fit_model function.
     """
-    # Define input dataframe
-    df_in_values = [[ 0.283     ,  0.2       , -1.11467689],
-                    [ 0.135     ,  0.178     , -1.70356676],
-                    [ 0.24      ,  0.157     , -1.38005604],
-                    [ 0.36      ,  0.155     , -0.95440403]]
-    df_in_index = [18149, 66384, 11855, 60766]
-    df_in_columns = ["ACCESS2",
-                    "BINGE",
-                    "GHLTH"]
-    df_in = pd.DataFrame(df_in_values, index=df_in_index, columns=df_in_columns)
 
     # Define expected output
     param_true = {"access2": 3.594, "binge": 2.582, "intercept": -2.648}
 
     # Create test output
     params_test, _ = fit_model(df_in,
-                          features = ["ACCESS2",
-                                      "BINGE"],
-                          response = "GHLTH",
-                          method = "linearregression",
-                          fit_intercept=True)
+                               features = ["ACCESS2",
+                                           "BINGE"],
+                               response = "GHLTH",
+                               method = "linearregression",
+                               fit_intercept=True)
     # Round to avoid floating point issues
     params_test = {key:round(value,3) for (key,value) in params_test.items()}
 
@@ -45,17 +45,6 @@ def test_fit_model_key_err():
 
     Checks if KeyError raised for missing column.
     """
-
-    # Define input dataframe
-    df_in_values = [[ 0.283     ,  0.2       , -1.11467689],
-                    [ 0.135     ,  0.178     , -1.70356676],
-                    [ 0.24      ,  0.157     , -1.38005604],
-                    [ 0.36      ,  0.155     , -0.95440403]]
-    df_in_index = [18149, 66384, 11855, 60766]
-    df_in_columns = ["ACCESS2",
-                    "BINGE",
-                    "GHLTH"]
-    df_in = pd.DataFrame(df_in_values, index=df_in_index, columns=df_in_columns)
 
     # Create test output
     with pytest.raises(KeyError):

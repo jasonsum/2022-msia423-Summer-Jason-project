@@ -7,22 +7,23 @@ import pandas as pd
 
 from src.evaluate import capture_rmse
 
+# Define input dataframe
+df_in_values = [[ 0.086     ,  0.187     , -1.71126277, -1.74854762],
+                [ 0.152     ,  0.198     , -1.79877704, -1.83784209],
+                [ 0.364     ,  0.141     , -0.70366568, -0.68524022],
+                [ 0.194     ,  0.183     , -1.5231373 , -1.62628582],
+                [ 0.169     ,  0.18      , -1.21396637, -1.18164287]]
+df_in_index = [1065, 9835, 10353, 17803, 18479]
+df_in_columns = ["GHLTH",
+                "predictions",
+                "ACCESS2",
+                "BINGE"]
+df_in = pd.DataFrame(df_in_values, index=df_in_index, columns=df_in_columns)
+
 def test_capture_rmse():
     """
     Conducts happy path unit test for capture_rmse function.
     """
-    # Define input dataframe
-    df_in_values = [[ 0.086     ,  0.187     , -1.71126277, -1.74854762],
-                    [ 0.152     ,  0.198     , -1.79877704, -1.83784209],
-                    [ 0.364     ,  0.141     , -0.70366568, -0.68524022],
-                    [ 0.194     ,  0.183     , -1.5231373 , -1.62628582],
-                    [ 0.169     ,  0.18      , -1.21396637, -1.18164287]]
-    df_in_index = [1065, 9835, 10353, 17803, 18479]
-    df_in_columns = ["GHLTH",
-                    "predictions",
-                    "ACCESS2",
-                    "BINGE"]
-    df_in = pd.DataFrame(df_in_values, index=df_in_index, columns=df_in_columns)
 
     # Define expected output
     rmse_true = 0.02750
@@ -44,18 +45,6 @@ def test_capture_rmse_key_err():
 
     Checks if KeyError raised for missing column.
     """
-
-    df_in_values = [[ 0.086     ,  0.187     , -1.71126277, -1.74854762],
-                    [ 0.152     ,  0.198     , -1.79877704, -1.83784209],
-                    [ 0.364     ,  0.141     , -0.70366568, -0.68524022],
-                    [ 0.194     ,  0.183     , -1.5231373 , -1.62628582],
-                    [ 0.169     ,  0.18      , -1.21396637, -1.18164287]]
-    df_in_index = [1065, 9835, 10353, 17803, 18479]
-    df_in_columns = ["GHLTH",
-                    "predictions",
-                    "ACCESS2",
-                    "BINGE"]
-    df_in = pd.DataFrame(df_in_values, index=df_in_index, columns=df_in_columns)
 
     # Create test output
     with pytest.raises(KeyError):
