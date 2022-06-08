@@ -1,4 +1,4 @@
-# Identifying Leading Indicators of Population Health
+# Predicting Community Health
 
 Project Creator & Developer: Jason Summer
 
